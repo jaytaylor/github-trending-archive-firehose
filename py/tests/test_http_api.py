@@ -70,3 +70,14 @@ def test_sql_injection_rejected(tmp_path: Path) -> None:
     assert response.status_code == 400
     payload = response.json()
     assert payload["error"] == "invalid_request"
+
+
+def test_invalid_range_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/top/streaks",
+        params={"kind": "repository", "start": "2025-01-02", "end": "2025-01-01"},
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
