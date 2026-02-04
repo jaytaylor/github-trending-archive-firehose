@@ -72,6 +72,96 @@ def test_sql_injection_rejected(tmp_path: Path) -> None:
     assert payload["error"] == "invalid_request"
 
 
+def test_invalid_language_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/day",
+        params={
+            "kind": "repository",
+            "date": "2025-01-01",
+            "language": "not-a-language",
+        },
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
+
+
+def test_invalid_presence_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/top/reappearing",
+        params={
+            "kind": "repository",
+            "start": "2025-01-01",
+            "end": "2025-01-02",
+            "presence": "weeks",
+        },
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
+
+
+def test_invalid_include_all_languages_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/top/owners",
+        params={"start": "2025-01-01", "end": "2025-01-02", "include_all_languages": "maybe"},
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
+
+
+def test_invalid_limit_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    for limit in ["0", "501"]:
+        response = client.get(
+            "/api/v1/top/reappearing",
+            params={
+                "kind": "repository",
+                "start": "2025-01-01",
+                "end": "2025-01-02",
+                "limit": limit,
+            },
+        )
+        assert response.status_code == 400
+        payload = response.json()
+        assert payload["error"] == "invalid_request"
+
+
+def test_non_int_limit_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/top/newcomers",
+        params={
+            "kind": "repository",
+            "start": "2025-01-01",
+            "end": "2025-01-02",
+            "limit": "ten",
+        },
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
+
+
+def test_invalid_range_reappearing_returns_400(tmp_path: Path) -> None:
+    client = _client(tmp_path)
+    response = client.get(
+        "/api/v1/top/reappearing",
+        params={
+            "kind": "repository",
+            "start": "2025-01-02",
+            "end": "2025-01-01",
+        },
+    )
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["error"] == "invalid_request"
+
+
 def test_invalid_range_returns_400(tmp_path: Path) -> None:
     client = _client(tmp_path)
     response = client.get(

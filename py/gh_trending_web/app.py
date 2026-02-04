@@ -21,12 +21,19 @@ def _error_response(error: str, message: str, hint: str | None = None) -> dict[s
     return payload
 
 
-def _parse_limit(limit: int | None) -> int:
+def _parse_limit(limit: str | int | None) -> int:
     if limit is None:
         return 50
-    if limit < 1 or limit > 500:
+    if isinstance(limit, int):
+        value = limit
+    else:
+        try:
+            value = int(limit)
+        except (TypeError, ValueError) as exc:
+            raise InvalidRequestError("limit must be between 1 and 500") from exc
+    if value < 1 or value > 500:
         raise InvalidRequestError("limit must be between 1 and 500")
-    return limit
+    return value
 
 
 def _parse_presence(presence: str | None) -> str:
@@ -240,10 +247,11 @@ def create_app(*, analytics_root: Path) -> FastAPI:
         language: str | None = Query(None),
         presence: str | None = Query(None),
         include_all_languages: str | None = Query(None),
-        limit: int | None = Query(None),
+        limit: str | None = Query(None),
     ):
         presence_mode = _parse_presence(presence)
         include_all = _parse_include_all_languages(include_all_languages, default=False)
+        limit_value = _parse_limit(limit)
         payload = {
             "kind": kind,
             "start": start,
@@ -251,7 +259,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
             "language": language,
             "presence": presence_mode,
             "include_all_languages": include_all,
-            "limit": _parse_limit(limit),
+            "limit": limit_value,
         }
         results = _cached_toplist(
             "top_reappearing",
@@ -263,7 +271,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
                 language=language,
                 presence=presence_mode,
                 include_all_languages=include_all,
-                limit=_parse_limit(limit),
+                limit=limit_value,
             ),
         )
         payload = {
@@ -284,15 +292,16 @@ def create_app(*, analytics_root: Path) -> FastAPI:
         end: str = Query(...),
         language: str | None = Query(None),
         include_all_languages: str | None = Query(None),
-        limit: int | None = Query(None),
+        limit: str | None = Query(None),
     ):
         include_all = _parse_include_all_languages(include_all_languages, default=False)
+        limit_value = _parse_limit(limit)
         payload = {
             "start": start,
             "end": end,
             "language": language,
             "include_all_languages": include_all,
-            "limit": _parse_limit(limit),
+            "limit": limit_value,
         }
         results = _cached_toplist(
             "top_owners",
@@ -302,7 +311,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
                 end,
                 language=language,
                 include_all_languages=include_all,
-                limit=_parse_limit(limit),
+                limit=limit_value,
             ),
         )
         payload = {
@@ -321,15 +330,16 @@ def create_app(*, analytics_root: Path) -> FastAPI:
         end: str = Query(...),
         kind: str | None = Query(None),
         include_all_languages: str | None = Query(None),
-        limit: int | None = Query(None),
+        limit: str | None = Query(None),
     ):
         include_all = _parse_include_all_languages(include_all_languages, default=False)
+        limit_value = _parse_limit(limit)
         payload = {
             "start": start,
             "end": end,
             "kind": kind,
             "include_all_languages": include_all,
-            "limit": _parse_limit(limit),
+            "limit": limit_value,
         }
         results = _cached_toplist(
             "top_languages",
@@ -339,7 +349,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
                 end,
                 kind=kind,
                 include_all_languages=include_all,
-                limit=_parse_limit(limit),
+                limit=limit_value,
             ),
         )
         payload = {
@@ -359,16 +369,17 @@ def create_app(*, analytics_root: Path) -> FastAPI:
         end: str = Query(...),
         language: str | None = Query(None),
         include_all_languages: str | None = Query(None),
-        limit: int | None = Query(None),
+        limit: str | None = Query(None),
     ):
         include_all = _parse_include_all_languages(include_all_languages, default=False)
+        limit_value = _parse_limit(limit)
         payload = {
             "kind": kind,
             "start": start,
             "end": end,
             "language": language,
             "include_all_languages": include_all,
-            "limit": _parse_limit(limit),
+            "limit": limit_value,
         }
         results = _cached_toplist(
             "top_streaks",
@@ -379,7 +390,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
                 end,
                 language=language,
                 include_all_languages=include_all,
-                limit=_parse_limit(limit),
+                limit=limit_value,
             ),
         )
         payload = {
@@ -400,16 +411,17 @@ def create_app(*, analytics_root: Path) -> FastAPI:
         end: str = Query(...),
         language: str | None = Query(None),
         include_all_languages: str | None = Query(None),
-        limit: int | None = Query(None),
+        limit: str | None = Query(None),
     ):
         include_all = _parse_include_all_languages(include_all_languages, default=False)
+        limit_value = _parse_limit(limit)
         payload = {
             "kind": kind,
             "start": start,
             "end": end,
             "language": language,
             "include_all_languages": include_all,
-            "limit": _parse_limit(limit),
+            "limit": limit_value,
         }
         results = _cached_toplist(
             "top_newcomers",
@@ -420,7 +432,7 @@ def create_app(*, analytics_root: Path) -> FastAPI:
                 end,
                 language=language,
                 include_all_languages=include_all,
-                limit=_parse_limit(limit),
+                limit=limit_value,
             ),
         )
         payload = {
