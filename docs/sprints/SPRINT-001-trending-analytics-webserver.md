@@ -17,6 +17,24 @@ This plan intentionally stages the work:
 
 At the end of Sprint 003 we note when **Approach 1 (Star-schema SQL, e.g. SQLite/Postgres)** becomes the best follow-up.
 
+## Success Criteria (Definition of Done)
+Sprint 001 (DuckDB/Parquet):
+- Build step produces Parquet + manifest from `archive/` and queries match expected semantics in tests.
+- Web UI can flip dates and change languages without a full page reload (or with minimal reload if we choose server-side rendering first).
+- API supports at least one “range toplist” (`top/reappearing`) with both `presence=day` and `presence=occurrence`.
+
+Sprint 002 (Cache):
+- Cached day views are measurably faster (add a regression guardrail test).
+- Pre-warm makes “next/prev day” feel instant after the first load.
+
+Sprint 003 (Rollups):
+- The most common metrics avoid full raw-table scans by using rollups (with correctness tests proving parity).
+
+## Performance Budget (initial targets; calibrate after first baseline)
+- Day view (uncached): < 300ms on local machine (data already built)
+- Day view (cached): < 50ms on local machine
+- `top/reappearing` over 90 days: < 750ms on local machine
+
 ## Context & Problem
 Today the archive lives as many tiny JSON files, optimized for storage and scraping, not analytics:
 - `archive/repository/<year>/<date>/<language>.json` contains `list: ["owner/repo", ...]`
@@ -28,6 +46,13 @@ We want:
 - Fast day navigation (prev/next, jump-to-date)
 - Fast dynamic analytics (group-by, distinct-days, streaks, filters)
 - A data model that is explicit about semantics (per-day vs per-(day,language) appearances, and how to treat “all languages” `(null).json`)
+
+## Open Questions (answer early in Sprint 001)
+- Default `include_all_languages` behavior for range endpoints (recommend default `false` to avoid accidental double-counting).
+- For “re-appearing” metrics, do we want to rank by:
+  - `days_present` only, or
+  - tie-break by `best_rank` / `avg_rank` / recency?
+- Should the UI show repo entries from `(null).json` by default when present, even if a language filter is selected?
 
 ## Current State Snapshot (repo review)
 - Scraper writes JSON in `src/main.ts` into `archive/*/<year>/<date>/*.json` with:
@@ -142,6 +167,10 @@ Verification:
       - `analytics/parquet/repository/year=2025/repo_trend_entry.parquet`
       - `analytics/parquet/developer/year=2025/dev_trend_entry.parquet`
     - Ensure stable schema and append-friendly pipeline
+    - Write rows in `date, language, rank` order to improve locality for typical queries
+- [ ] Support incremental rebuild (at least by year):
+  - If a given `year=YYYY` Parquet exists, allow `--rebuild-year` vs append-only mode
+  - (Optional) detect missing dates by comparing `archive/**/<date>/` to manifest dates
 - [ ] Emit a `analytics/parquet/manifest.json`:
   - min/max date per kind
   - available languages (global list) per kind
@@ -172,6 +201,30 @@ Verification:
     - `COUNT(DISTINCT date)` grouped by `full_name`
   - For developer:
     - `COUNT(DISTINCT date)` grouped by `username`
+- [ ] Write the “load-bearing” SQL in one place (examples):
+  - `top/reappearing` (repositories, presence=day)
+    ```sql
+    SELECT
+      full_name,
+      owner,
+      COUNT(DISTINCT date) AS days_present,
+      MIN(rank) AS best_rank
+    FROM repo_trend_entry
+    WHERE date BETWEEN ? AND ?
+      AND (? IS NULL OR language = ?)
+      AND (? OR language IS NOT NULL) -- include_all_languages=false excludes NULL language rows
+    GROUP BY full_name, owner
+    ORDER BY days_present DESC, best_rank ASC, full_name ASC
+    LIMIT ?;
+    ```
+  - `get_day` (repositories)
+    ```sql
+    SELECT full_name, owner, repo, rank
+    FROM repo_trend_entry
+    WHERE date = ?
+      AND (language = ? OR (language IS NULL AND ? = '__all__'))
+    ORDER BY rank ASC;
+    ```
 - [ ] Add unit tests with a tiny synthetic archive fixture:
   - at least 2 dates, 2 languages, include `(null).json`, and one entity that appears in multiple languages on the same day
   - tests must prove the difference between `presence=occurrence` and `presence=day`
@@ -184,6 +237,10 @@ Verification:
   - `GET /repositories` and `GET /developers` render HTML (Jinja2 templates)
   - `GET /api/v1/...` returns JSON
   - Server reads from `analytics/parquet/` and `manifest.json`
+- [ ] Validate request params early (400 with helpful message):
+  - `kind` must be one of `{repository, developer}`
+  - `date` must exist in manifest for that kind
+  - `language` must be either `__all__` or exist for that kind/date (depending on manifest richness)
 - [ ] UI “flip day” requirements:
   - Prev/Next day navigation works even if there are missing days (skip to nearest available)
   - Language dropdown is based on available languages for that day (or global list if we keep it simple in Sprint 001)
