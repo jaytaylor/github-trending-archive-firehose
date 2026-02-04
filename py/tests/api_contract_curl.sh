@@ -55,7 +55,7 @@ case "$SCENARIO" in
     curl_json "invalid_date" "$BASE_URL/api/v1/day?kind=repository&date=2025-13-01&language=python"
     ;;
   missing-date)
-    curl_json "missing_date" "$BASE_URL/api/v1/day?kind=repository&date=2025-01-05&language=python"
+    curl_json "missing_date" "$BASE_URL/api/v1/day?kind=repository&date=1900-01-01&language=python"
     ;;
   *)
     echo "Unknown scenario: $SCENARIO" >&2
