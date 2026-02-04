@@ -52,6 +52,15 @@ Keep generated artifacts out of `archive/` and clearly separate from source:
 - `analytics/duckdb/analytics.duckdb` - optional persisted DuckDB catalog (views + metadata)
 - `.scratch/verification/SPRINT-001/` - evidence artifacts while implementing
 
+### Execution guardrails (learned from a “good” sprint plan)
+- Keep the work in-order (Sprint 001 -> 002 -> 003). Do not start caching/rollups until baseline semantics are proven by tests.
+- Every endpoint must have at least one test (unit or integration) that asserts:
+  - stable ordering (rank)
+  - correct “presence” semantics (distinct-day vs occurrence)
+  - correct `(null)`/all-languages behavior
+- Prefer “small, explicit helpers” over clever one-off SQL strings scattered in route handlers.
+- Ensure generated artifacts are ignored by git (`analytics/`, `.scratch/`, `.venv/`, `__pycache__/`).
+
 ## Data Model (canonical rows)
 
 ### Canonical tables (logical)
@@ -110,6 +119,11 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
   - `make py-test`
   - `make py-run` (starts server)
   - `make analytics-build` (build parquet from archive)
+- [ ] Update `.gitignore` to exclude:
+  - `analytics/`
+  - `.scratch/`
+  - `.venv/`
+  - `**/__pycache__/`
 
 Verification:
 - `python3 -m pytest -q` (exit 0)
@@ -131,6 +145,8 @@ Verification:
 - [ ] Emit a `analytics/parquet/manifest.json`:
   - min/max date per kind
   - available languages (global list) per kind
+  - available dates (sorted) per kind
+  - optional: languages-per-date map (to drive UI dropdown without scanning Parquet at request time)
   - row counts per year file
 
 Verification:
@@ -148,6 +164,9 @@ Verification:
     - `top_reappearing(kind, start, end, language?, presence_mode, include_all_languages)`
     - `top_owners(start, end, ...)` (repo only)
   - Uses only parameterized queries (no string interpolation of user inputs)
+- [ ] Concurrency decision (document + test):
+  - Preferred: open a DuckDB connection per request (read-only workload) OR keep one shared connection behind a lock.
+  - Avoid sharing one connection concurrently across threads without protection.
 - [ ] Define precise SQL semantics for `presence=day`:
   - For repository:
     - `COUNT(DISTINCT date)` grouped by `full_name`
@@ -366,4 +385,3 @@ flowchart TD
     S --> U
   end
 ```
-
