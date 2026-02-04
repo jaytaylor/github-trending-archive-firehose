@@ -5,7 +5,7 @@ _Evidence rule:_ When executing this plan, every completed checklist item must i
 2) its exit code, and
 3) any artifacts (logs, screenshots, `.scratch` transcripts) stored under `.scratch/verification/SPRINT-00X/...` (match the sprint number; e.g. Sprint 001 -> `SPRINT-001/`, Sprint 002 -> `SPRINT-002/`).
 
-_Last verification run:_ 2026-02-04 00:33 PST (logs under `.scratch/verification/SPRINT-00X/...`).
+_Last verification run:_ 2026-02-04 00:38 PST (logs under `.scratch/verification/SPRINT-00X/...`).
 
 # Sprint #001-003 - GitHub Trending Archive Analytics Webserver (DuckDB/Parquet -> Cache -> Rollups)
 
@@ -920,6 +920,8 @@ Acceptance verification (capture logs under `.scratch/verification/SPRINT-001/ac
 - `uv run ruff format && uv run ruff check && uv run python -m pytest -q` (exit 0; `.scratch/verification/SPRINT-001/acceptance/ruff-pytest.log`)
 - `uv run python -m pytest -q py/tests/test_e2e_smoke.py` (exit 0; `.scratch/verification/SPRINT-001/acceptance/e2e-smoke.log`)
 - `bash .scratch/verification/SPRINT-001/001E-2/run_contract.sh` (exit 0; `.scratch/verification/SPRINT-001/acceptance/api-contract.log`)
+- `timeout 135 make build` (exit 0; `.scratch/verification/SPRINT-001/acceptance/make-build.log`)
+- `timeout 135 make test` (exit 0; `.scratch/verification/SPRINT-001/acceptance/make-test.log`)
 
 ## Sprint 002 (Approach 4) - Result caching + pre-warming
 
