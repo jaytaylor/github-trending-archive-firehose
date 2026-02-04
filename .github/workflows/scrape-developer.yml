@@ -10,6 +10,10 @@ on:
     - cron: "10 * * * *"
   workflow_dispatch:
 
+concurrency:
+  group: archive-update-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
