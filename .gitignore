@@ -3,3 +3,8 @@
 /node_modules/
 .DS_Store
 npm-debug.log*
+analytics/
+.scratch/
+.venv/
+**/__pycache__/
+*.egg-info/
