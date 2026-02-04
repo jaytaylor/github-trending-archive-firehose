@@ -1,4 +1,4 @@
-# GitHub Trending Archive Firehose
+# GitHub Trending Firehose
 
 ## Introduction
 
@@ -112,11 +112,11 @@ I was inspired by [other project](https://github.com/Leko/github-trending-archiv
 
 ## License
 
-- `GitHub Trending Archive Firehose` project is open-sourced software licensed under the [MIT license](LICENSE) by [Anton Komarev].
+- `GitHub Trending Firehose` project is open-sourced software licensed under the [MIT license](LICENSE) by [Anton Komarev].
 
 ## 🌟 Stargazers over time
 
-[![Stargazers over time](https://chart.yhype.me/github/repository-star/v1/890441376.svg)](https://yhype.me?utm_source=github&utm_medium=jaytaylor-github-trending-archive-firehose&utm_content=chart-repository-star-cumulative)
+[![Stargazers over time](https://chart.yhype.me/github/repository-star/v1/890441376.svg)](https://yhype.me?utm_source=github&utm_medium=jaytaylor-github-trending-firehose&utm_content=chart-repository-star-cumulative)
 
 ## About CyberCog
 
