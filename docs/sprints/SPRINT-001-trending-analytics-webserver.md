@@ -439,11 +439,6 @@ Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --help`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001B/build-help.log`
 ```
-```text
-Command: `PYTHONPATH=py uv run python -m gh_trending_web --help`
-Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001D/web-help.log`
-```
   - `uv run python -m pytest -q`
   - `PYTHONPATH=py uv run python -m gh_trending_web --help` (CLI help)
   - `PYTHONPATH=py uv run python -m gh_trending_analytics build --help` (build parquet from archive)
@@ -480,11 +475,6 @@ Command: `uv run ruff format && uv run ruff check && uv run python -m pytest -q`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/acceptance/ruff-pytest.log`
 ```
-```text
-Command: `uv run ruff format && uv run ruff check && uv run python -m pytest -q`
-Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001A/ruff-pytest.log`
-```
 - [X] `.gitignore` excludes `analytics/`, `.scratch/`, `.venv/`, and `**/__pycache__/`
 ```text
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
@@ -505,14 +495,6 @@ Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --kind repo
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001B/build-repo-2025.log`
 
-Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --kind developer --year 2025`
-Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001B/build-dev-2025.log`
-```
-```text
-Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --kind repository --year 2025`
-Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001B/build-repo-2025.log`
 Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --kind developer --year 2025`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001B/build-dev-2025.log`
@@ -1132,8 +1114,8 @@ Command: `rg -n "repo_day_presence|dev_day_presence" docs/ADR.md`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-003/003A/rollup-decision.log`
 ```
-  - `repo_day_presence(date, full_name, owner, best_rank, languages_count, in_all_languages)`
-  - `dev_day_presence(date, username, best_rank, languages_count, in_all_languages)`
+  - `repo_day_presence(date, full_name, owner, best_rank_any, best_rank_non_null, non_null_languages, has_all_languages)`
+  - `dev_day_presence(date, username, best_rank_any, best_rank_non_null, non_null_languages, has_all_languages)`
 
 Positive tests:
 - `uv run python -m pytest -q py/tests/test_rollup_semantics.py` (exit 0; `.scratch/verification/SPRINT-003/003A/pytest-rollup-semantics.log`)
