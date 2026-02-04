@@ -324,7 +324,6 @@ Sample response (200 OK):
 ### 000A - Sprint doc hygiene + ADR alignment
 - [X] Normalize sprint document status markers, remove duplicate evidence blocks, and keep evidence paths under `.scratch/verification/SPRINT-00X/<task-id>/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -334,7 +333,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/dedupe.log`
 ```
 - [X] Confirm ADR entries cover ETL, query engine, web stack, caching, and rollup decisions.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -344,7 +342,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/adr-check.log`
 ```
 - [X] Document `languages_by_date` as a required manifest field for UI dropdowns.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -354,7 +351,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/languages-by-date.log`
 ```
 - [X] Confirm verification harness conventions are documented in the evidence logging plan.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -364,7 +360,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/verification-plan.log`
 ```
 - [X] Verify mermaid diagrams render with `mmdc` and capture artifacts under `.scratch/verification/`.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -376,7 +371,6 @@ Evidence: `.scratch/verification/SPRINT-001/appendix/mermaid-render.log`
 #### Acceptance Criteria - Phase 000
 - [X] Sprint doc hygiene updates are applied and evidence paths are consistent.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -386,7 +380,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/dedupe.log`
 ```
 - [X] ADR entries capture the major architecture decisions for the analytics stack.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -396,7 +389,6 @@ Evidence: `.scratch/verification/SPRINT-001/000A/adr-check.log`
 ```
 - [X] Mermaid diagrams render successfully with artifacts captured for review.
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -412,7 +404,6 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
 ### 001A - Python project scaffold (FastAPI + DuckDB + Parquet)
 - [X] Add `pyproject.toml` (or `requirements.txt` if preferred) for:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -425,7 +416,6 @@ Evidence: `.scratch/verification/SPRINT-001/001A/py-imports.log`
   - dev: `ruff` (lint + format); optional: `mypy` (types)
 - [X] Add module layout (example):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -438,7 +428,6 @@ Evidence: `.scratch/verification/SPRINT-001/001A/pytest.log`
   - `py/tests/` (pytest)
 - [X] Add documented `uv` command entrypoints and Makefile wrappers for build/test (precommit guard):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -466,7 +455,6 @@ Evidence: `.scratch/verification/SPRINT-001/001A/make-test.log`
   - `uv run ruff format` + `uv run ruff check` (lint/format)
 - [X] Update `.gitignore` to exclude:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -490,7 +478,6 @@ Negative tests:
 #### Acceptance Criteria - 001A
 - [X] Python project scaffolding is usable via `uv` (imports succeed, pytest discovery works)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -500,7 +487,6 @@ Evidence: `.scratch/verification/SPRINT-001/acceptance/ruff-pytest.log`
 ```
 - [X] `.gitignore` excludes `analytics/`, `.scratch/`, `.venv/`, and `**/__pycache__/`
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -512,7 +498,6 @@ Evidence: `.scratch/verification/SPRINT-001/001A/gitignore-analytics.log`
 ### 001B - ETL: archive JSON -> canonical Parquet datasets
 - [X] Implement `analytics-build` to (re)build Parquet from `archive/`:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -538,7 +523,6 @@ Evidence: `.scratch/verification/SPRINT-001/001B/build-dev-2025.log`
     - Write rows in `date, language, rank` order to improve locality for typical queries
 - [X] Support incremental rebuild (at least by year):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -550,7 +534,6 @@ Evidence: `.scratch/verification/SPRINT-001/001B/build-repo-2025-rebuild.log`
   - (Optional) detect missing dates by comparing `archive/**/<date>/` to manifest dates
 - [X] Emit a `analytics/parquet/manifest.json`:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -606,7 +589,6 @@ Negative tests:
 #### Acceptance Criteria - 001B
 - [X] Parquet files are produced per kind/year with stable schemas and deterministic ordering
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -616,7 +598,6 @@ Evidence: `.scratch/verification/SPRINT-001/001B/pytest-build.log`
 ```
 - [X] Manifest includes min/max dates, languages, languages-by-date (if enabled), and row counts
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -628,7 +609,6 @@ Evidence: `.scratch/verification/SPRINT-001/001B/pytest-build.log`
 ### 001C - DuckDB query layer (parameterized SQL)
 - [X] Implement a small query library that:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -646,7 +626,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-query.log`
   - Uses only parameterized queries (no string interpolation of user inputs)
 - [X] Concurrency model (document + test):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -658,7 +637,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-concurrency.log`
   - **Rationale:** multiple concurrent reads are expected; sharing a single connection across threads invites subtle races.
 - [X] Define precise SQL semantics for `presence=day`:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -672,7 +650,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-query.log`
     - `COUNT(DISTINCT date)` grouped by `username`
 - [X] Write the “load-bearing” SQL in one place (examples):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -705,7 +682,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-query.log`
     ```
 - [X] Add unit tests with a tiny synthetic archive fixture:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -728,7 +704,6 @@ Negative tests:
 #### Acceptance Criteria - 001C
 - [X] Query layer uses parameterized SQL and passes core semantic tests (`presence=day` vs `presence=occurrence`)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -738,7 +713,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-query.log`
 ```
 - [X] Connection-per-request concurrency model is documented and exercised by tests
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -750,7 +724,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-concurrency.log`
 ### 001D - FastAPI server + minimal UI (day flip + analytics)
 - [X] Implement FastAPI app:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -763,7 +736,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`
   - Server reads from `analytics/parquet/` and `manifest.json`
 - [X] Validate request params early (400 with helpful message):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -776,7 +748,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/http-invalid-date.log`
   - `language` must be either `__all__` or exist for that kind/date (depending on manifest richness)
 - [X] UI “flip day” requirements:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -788,7 +759,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/ui-template-check.log`
   - Language dropdown is based on available languages for that day (or global list if we keep it simple in Sprint 001)
 - [X] Add an initial metrics panel:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -802,8 +772,7 @@ Evidence: `.scratch/verification/SPRINT-001/001D/metrics-template-check.log`
 Positive tests:
 - `uv run python -m pytest -q py/tests/test_http_api.py` (exit 0; `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`)
 - `PYTHONPATH=py uv run python -m gh_trending_web --help` (exit 0; `.scratch/verification/SPRINT-001/001D/web-help.log`)
-- `bash .scratch/verification/SPRINT-001/001D/server-start.sh` (exit 0; `.scratch/verification/SPRINT-001/001D/server-start.log`)
-- `bash .scratch/verification/SPRINT-001/001D/curl-dates.sh` (exit 0; `.scratch/verification/SPRINT-001/001D/curl-dates.log`)
+- `bash .scratch/verification/SPRINT-001/001D/run_server_smoke.sh` (exit 0; `.scratch/verification/SPRINT-001/001D/server-start.log`, `.scratch/verification/SPRINT-001/001D/curl-dates.log`)
 
 Negative tests:
 - Invalid date format returns 400 with error envelope: `.scratch/verification/SPRINT-001/001D/http-invalid-date.log`
@@ -814,7 +783,6 @@ Negative tests:
 #### Acceptance Criteria - 001D
 - [X] API endpoints validate inputs and return the documented error envelope on failures
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -824,7 +792,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`
 ```
 - [X] UI supports date flip and language selection with minimal reload and correct data binding
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -836,7 +803,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/ui-template-check.log`
 ### 001E - E2E smoke tests (proof the whole stack works)
 - [X] Add a pytest-based E2E smoke test (no scripts dir) that:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -861,7 +827,6 @@ Negative tests:
 #### Acceptance Criteria - 001E
 - [X] E2E smoke test validates core flows (day ordering, reappearing counts, special languages)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -873,41 +838,38 @@ Evidence: `.scratch/verification/SPRINT-001/001E/e2e-smoke.log`
 ### 001E-2 - Contract verification scripts (curl-based)
 - [X] Add `py/tests/api_contract_curl.sh` that:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `bash py/tests/api_contract_curl.sh --base-url http://127.0.0.1:8002`
+Command: `bash .scratch/verification/SPRINT-001/001E-2/run_contract.sh`
 Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001E-2/contract-happy.log`
+Evidence: `.scratch/verification/SPRINT-001/001E-2/contract-run.log`
 ```
   - Exercises all endpoints via curl (happy + common failure cases)
   - Validates response content-type headers
   - Stores JSON responses under `.scratch/verification/SPRINT-001/001E-2/responses/` for diffing
 
 Positive tests:
-- `bash py/tests/api_contract_curl.sh --base-url http://127.0.0.1:8002` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-happy.log`)
+- `bash .scratch/verification/SPRINT-001/001E-2/run_contract.sh` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-happy.log`)
 
 Negative tests:
-- `bash py/tests/api_contract_curl.sh --scenario invalid-date` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-invalid-date.log`)
-- `bash py/tests/api_contract_curl.sh --scenario missing-date` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-missing-date.log`)
+- Contract run includes invalid-date scenario: `.scratch/verification/SPRINT-001/001E-2/contract-invalid-date.log`
+- Contract run includes missing-date scenario: `.scratch/verification/SPRINT-001/001E-2/contract-missing-date.log`
 
 #### Acceptance Criteria - 001E-2
 - [X] Contract script exercises all endpoints and stores response artifacts for diffing
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `bash py/tests/api_contract_curl.sh --base-url http://127.0.0.1:8002`
+Command: `bash .scratch/verification/SPRINT-001/001E-2/run_contract.sh`
 Exit code: `0`
-Evidence: `.scratch/verification/SPRINT-001/001E-2/contract-happy.log`
+Evidence: `.scratch/verification/SPRINT-001/001E-2/contract-run.log`
 ```
 
 ### Acceptance Criteria - Sprint 001
 - [X] ETL produces valid Parquet files that DuckDB can query without error
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -917,7 +879,6 @@ Evidence: `.scratch/verification/SPRINT-001/001B/pytest-build.log`
 ```
 - [X] Day view returns stable ordering matching source JSON rank
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -927,7 +888,6 @@ Evidence: `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`
 ```
 - [X] `top/reappearing` with `presence=day` and `presence=occurrence` return different counts for a fixture that duplicates an entity across languages on the same day
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -937,7 +897,6 @@ Evidence: `.scratch/verification/SPRINT-001/001C/pytest-query.log`
 ```
 - [X] Language filter with `c++` and `(null)` does not crash and returns deterministic results
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -947,7 +906,6 @@ Evidence: `.scratch/verification/SPRINT-001/001E/e2e-smoke.log`
 ```
 - [X] Manifest reflects actual data (min/max dates match filesystem and match Parquet contents)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -959,7 +917,7 @@ Evidence: `.scratch/verification/SPRINT-001/001B/pytest-build.log`
 Acceptance verification (capture logs under `.scratch/verification/SPRINT-001/acceptance/`):
 - `uv run ruff format && uv run ruff check && uv run python -m pytest -q` (exit 0; `.scratch/verification/SPRINT-001/acceptance/ruff-pytest.log`)
 - `uv run python -m pytest -q py/tests/test_e2e_smoke.py` (exit 0; `.scratch/verification/SPRINT-001/acceptance/e2e-smoke.log`)
-- `bash py/tests/api_contract_curl.sh --base-url http://127.0.0.1:8002` (exit 0; `.scratch/verification/SPRINT-001/acceptance/api-contract.log`)
+- `bash .scratch/verification/SPRINT-001/001E-2/run_contract.sh` (exit 0; `.scratch/verification/SPRINT-001/acceptance/api-contract.log`)
 
 ## Sprint 002 (Approach 4) - Result caching + pre-warming
 
@@ -968,7 +926,6 @@ Execution order: 002A -> 002B -> 002C.
 ### 002A - Cache primitives + cache keys
 - [X] Add caching for:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -980,7 +937,6 @@ Evidence: `.scratch/verification/SPRINT-002/002A/pytest-cache.log`
   - toplists `(kind, metric, start, end, filters...)`
 - [X] Define stable cache keys (JSON-serialized params, sorted keys)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -990,7 +946,6 @@ Evidence: `.scratch/verification/SPRINT-002/002A/cache-key-collision.log`
 ```
 - [X] Add TTL defaults and max-size bounds
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1009,7 +964,6 @@ Negative tests:
 #### Acceptance Criteria - 002A
 - [X] Cache keys are stable and distinct across parameter sets
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1019,7 +973,6 @@ Evidence: `.scratch/verification/SPRINT-002/002A/cache-key-collision.log`
 ```
 - [X] TTL and max-size bounds are enforced without correctness regressions
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1031,7 +984,6 @@ Evidence: `.scratch/verification/SPRINT-002/002A/cache-ttl-expiry.log`
 ### 002B - Pre-warm strategy for fast day flipping
 - [X] When serving a day view, enqueue pre-warm for:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1044,7 +996,6 @@ Evidence: `.scratch/verification/SPRINT-002/002B/pytest-prewarm.log`
   - (optional) “all languages” + currently selected language
 - [X] Add simple instrumentation (log + counters) for:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1065,7 +1016,6 @@ Negative tests:
 #### Acceptance Criteria - 002B
 - [X] Pre-warm enqueues prev/next day safely and records success/failure counters
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1077,7 +1027,6 @@ Evidence: `.scratch/verification/SPRINT-002/002B/prewarm-out-of-range.log`
 ### 002C - Performance budget + regression guardrails
 - [X] Add a lightweight perf test that asserts:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1097,7 +1046,6 @@ Negative tests:
 #### Acceptance Criteria - 002C
 - [X] Perf guardrails enforce cached day view and toplist latency budgets
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1109,7 +1057,6 @@ Evidence: `.scratch/verification/SPRINT-002/002C/pytest-perf.log`
 ### Acceptance Criteria - Sprint 002
 - [X] Cache hit ratio improves for day-flip navigation (demonstrated via logs/counters in a manual run)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1119,7 +1066,6 @@ Evidence: `.scratch/verification/SPRINT-002/acceptance/cache-hit-ratio.log`
 ```
 - [X] Pre-warming loads prev/next day results without increasing p95 latency for the initiating request
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1129,7 +1075,6 @@ Evidence: `.scratch/verification/SPRINT-002/002B/pytest-prewarm.log`
 ```
 - [X] Cached day endpoint meets the Sprint 002 performance budget on the local machine
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1139,7 +1084,6 @@ Evidence: `.scratch/verification/SPRINT-002/002C/pytest-perf.log`
 ```
 - [X] Cache invalidation/TTL behavior is covered by tests
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1159,7 +1103,6 @@ Execution order: 003A -> 003B -> 003C.
 ### 003A - Identify the “top 5” expensive queries + decide rollups
 - [X] Capture real usage patterns (or assume likely ones):
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1173,7 +1116,6 @@ Evidence: `.scratch/verification/SPRINT-003/003A/usage-patterns.log`
   - top owners by distinct repos over a window
 - [X] Decide rollups that preserve semantics and reduce scan cost:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1193,7 +1135,6 @@ Negative tests:
 #### Acceptance Criteria - 003A
 - [X] Rollup design aligns with observed expensive queries and preserves semantics for day presence
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1205,7 +1146,6 @@ Evidence: `.scratch/verification/SPRINT-003/003A/pytest-rollup-semantics.log`
 ### 003B - Incremental rollup builder + storage format
 - [X] Implement `analytics-rollup` command that:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1218,7 +1158,6 @@ Evidence: `.scratch/verification/SPRINT-003/003B/rollup-help.log`
   - writes rollups as Parquet into `analytics/rollups/`
 - [X] Update query layer to use rollups when the query can be answered from them
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1238,7 +1177,6 @@ Negative tests:
 #### Acceptance Criteria - 003B
 - [X] Rollup builder supports incremental rebuilds and stores Parquet rollups per year
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1248,7 +1186,6 @@ Evidence: `.scratch/verification/SPRINT-003/003B/rollup-from-date.log`
 ```
 - [X] Query layer prefers rollups when eligible and falls back safely when not
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1260,7 +1197,6 @@ Evidence: `.scratch/verification/SPRINT-003/003B/rollup-corrupt-fallback.log`
 ### 003C - Extend analytics endpoints (streaks + advanced toplists)
 - [X] Add endpoints:
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1272,7 +1208,6 @@ Evidence: `.scratch/verification/SPRINT-003/003C/pytest-streaks.log`
   - `GET /api/v1/top/newcomers?kind=repository&start=...&end=...` (first_seen within window)
 - [X] Add tests for streak calculations (edge cases: gaps, duplicates across languages, include/exclude all-languages)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1291,7 +1226,6 @@ Negative tests:
 #### Acceptance Criteria - 003C
 - [X] Streaks and newcomers endpoints return correct results with edge-case coverage
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1303,7 +1237,6 @@ Evidence: `.scratch/verification/SPRINT-003/003C/pytest-streaks.log`
 ### Acceptance Criteria - Sprint 003
 - [X] Rollups preserve semantics: results match raw-table queries for covered endpoints (proved by parity tests)
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1313,7 +1246,6 @@ Evidence: `.scratch/verification/SPRINT-003/003A/pytest-rollup-semantics.log`
 ```
 - [X] Rollup rebuild can run incrementally without dropping/duplicating days
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1323,7 +1255,6 @@ Evidence: `.scratch/verification/SPRINT-003/003B/rollup-from-date.log`
 ```
 - [X] New endpoints (streaks/newcomers) have both happy-path and edge-case test coverage
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
@@ -1333,7 +1264,6 @@ Evidence: `.scratch/verification/SPRINT-003/003C/pytest-streaks.log`
 ```
 - [X] Query layer prefers rollups for supported queries and falls back safely when rollups are missing/corrupt
 ```text
-{placeholder for verification justification/reasoning and evidence log}
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
