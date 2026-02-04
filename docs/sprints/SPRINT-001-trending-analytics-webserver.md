@@ -363,7 +363,7 @@ Evidence: `.scratch/verification/SPRINT-001/000A/verification-plan.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `cat .scratch/verification/SPRINT-001/appendix/mermaid-render.log`
+Command: `bash .scratch/verification/SPRINT-001/appendix/render_mermaid.sh`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/appendix/mermaid-render.log`
 ```
@@ -392,7 +392,7 @@ Evidence: `.scratch/verification/SPRINT-001/000A/adr-check.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `cat .scratch/verification/SPRINT-001/appendix/mermaid-render.log`
+Command: `bash .scratch/verification/SPRINT-001/appendix/render_mermaid.sh`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/appendix/mermaid-render.log`
 ```
@@ -439,19 +439,19 @@ Command: `PYTHONPATH=py uv run python -m gh_trending_analytics build --help`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001B/build-help.log`
 
-Command: `make build`
+Command: `make -j10 build`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001A/make-build.log`
 
-Command: `make test`
+Command: `make -j10 test`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001A/make-test.log`
 ```
   - `uv run python -m pytest -q`
   - `PYTHONPATH=py uv run python -m gh_trending_web --help` (CLI help)
   - `PYTHONPATH=py uv run python -m gh_trending_analytics build --help` (build parquet from archive)
-  - `make build`
-  - `make test`
+  - `make -j10 build`
+  - `make -j10 test`
   - `uv run ruff format` + `uv run ruff check` (lint/format)
 - [X] Update `.gitignore` to exclude:
 ```text

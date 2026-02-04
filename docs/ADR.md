@@ -51,3 +51,20 @@ Some analytics (reappearing, streaks) rely on day-level presence, which can be c
 ### Consequences
 - Rollups accelerate common day-based queries without changing underlying semantics.
 - Rollups must be regenerated whenever Parquet inputs change and should be treated as derived artifacts.
+
+## ADR-004: FastAPI + Jinja2 web stack for local analytics UI
+
+- Status: Accepted
+- Date: 2026-02-04
+
+### Context
+We need a lightweight local web server to expose JSON APIs and a minimal HTML UI for day navigation and toplist analytics without introducing a heavy frontend build pipeline.
+
+### Decision
+- Use FastAPI for HTTP routing and request validation.
+- Render the minimal UI using Jinja2 templates with lightweight client-side fetch calls.
+- Keep the server local-first (no auth, no rate limiting) and read from the analytics Parquet datasets plus manifest metadata.
+
+### Consequences
+- The UI is simple and fast to iterate without a dedicated frontend build step.
+- API and UI live in the same Python process, simplifying deployment for local use.
