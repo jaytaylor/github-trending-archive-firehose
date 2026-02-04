@@ -1,5 +1,5 @@
 {
-  "name": "github-trending-archive",
+  "name": "github-trending-archive-firehose",
   "description": "The history of GitHub trending",
   "private": true,
   "version": "1.0.0",
