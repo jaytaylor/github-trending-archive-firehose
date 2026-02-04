@@ -1,0 +1,38 @@
+name: import-hf-projects
+
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch:
+
+jobs:
+  import-hf-projects:
+    runs-on: ubuntu-latest
+    env:
+      HF_PROJECTS_SOURCE: ${{ vars.HF_PROJECTS_CSV_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "16"
+          cache: "npm"
+      - run: npm ci
+      - name: Import hf-projects
+        run: |
+          if [ -z "$HF_PROJECTS_SOURCE" ]; then
+            echo "HF_PROJECTS_CSV_URL repository variable is not set."
+            exit 1
+          fi
+          npm run start import hf-projects "$HF_PROJECTS_SOURCE" "$(pwd)/archive/repository" --skip-existing
+      - run: git status --porcelain
+      - name: Commit and push changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add archive
+          git commit -m "chore: import hf-projects $(date +'%Y-%m-%d')"
+          git push origin main
