@@ -3,7 +3,7 @@ Legend: [ ] Incomplete, [X] Complete
 _Evidence rule:_ When executing this plan, every completed checklist item must include:
 1) the exact verification command (wrapped with backticks),
 2) its exit code, and
-3) any artifacts (logs, screenshots, `.scratch` transcripts) stored under `.scratch/verification/SPRINT-001/...`.
+3) any artifacts (logs, screenshots, `.scratch` transcripts) stored under `.scratch/verification/SPRINT-00X/...` (match the sprint number; e.g. Sprint 001 -> `SPRINT-001/`, Sprint 002 -> `SPRINT-002/`).
 
 # Sprint #001-003 - GitHub Trending Archive Analytics Webserver (DuckDB/Parquet -> Cache -> Rollups)
 
@@ -128,6 +128,180 @@ We keep **two** core entry tables to avoid ambiguity between repo and developer 
 - `GET /api/v1/top/owners?start=...&end=...` (repository only)
 - `GET /api/v1/top/languages?start=...&end=...` (counts of entries per language; both kinds)
 
+### API Reference (v1)
+
+#### Error response shape (all endpoints)
+Error responses use a shared envelope:
+```json
+{
+  "error": "invalid_request",
+  "message": "Human-readable message",
+  "hint": "Optional hint for how to fix it"
+}
+```
+
+#### GET `/api/v1/dates`
+
+| Parameter | Type | Required | Valid Values | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | string | Yes | `repository`, `developer` | Type of trending list |
+
+Sample request:
+```
+GET /api/v1/dates?kind=repository
+```
+
+Sample response (200 OK):
+```json
+{
+  "kind": "repository",
+  "dates": ["2025-07-21", "2025-07-22"]
+}
+```
+
+Error response (400):
+```json
+{
+  "error": "invalid_kind",
+  "message": "Unsupported kind: repos",
+  "hint": "Use kind=repository or kind=developer"
+}
+```
+
+#### GET `/api/v1/day`
+
+| Parameter | Type | Required | Valid Values | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | string | Yes | `repository`, `developer` | Type of trending list |
+| `date` | string | Yes | `YYYY-MM-DD` | Date of snapshot |
+| `language` | string | No | slug or `__all__` | Filter by language; default `__all__` |
+
+Sample request:
+```
+GET /api/v1/day?kind=repository&date=2025-07-22&language=python
+```
+
+Sample response (200 OK, repositories):
+```json
+{
+  "kind": "repository",
+  "date": "2025-07-22",
+  "language": "python",
+  "entries": [
+    {"rank": 1, "full_name": "owner/repo", "owner": "owner", "repo": "repo"}
+  ]
+}
+```
+
+Sample response (200 OK, developers):
+```json
+{
+  "kind": "developer",
+  "date": "2025-07-22",
+  "language": "python",
+  "entries": [
+    {"rank": 1, "username": "octocat"}
+  ]
+}
+```
+
+Error response (404 missing date):
+```json
+{
+  "error": "date_not_found",
+  "message": "Date 2025-07-23 not found for kind=repository",
+  "hint": "Try one of: 2025-07-21, 2025-07-22"
+}
+```
+
+#### GET `/api/v1/top/reappearing`
+
+| Parameter | Type | Required | Valid Values | Description |
+| --- | --- | --- | --- | --- |
+| `kind` | string | Yes | `repository`, `developer` | Trend type |
+| `start` | string | Yes | `YYYY-MM-DD` | Start date (inclusive) |
+| `end` | string | Yes | `YYYY-MM-DD` | End date (inclusive) |
+| `language` | string | No | slug | Optional language filter |
+| `presence` | string | No | `day`, `occurrence` | Distinct-day presence vs raw occurrences |
+| `include_all_languages` | bool | No | `true`, `false` | Whether to include rows where `language IS NULL` |
+| `limit` | int | No | `1..500` | Max results |
+
+Sample request:
+```
+GET /api/v1/top/reappearing?kind=repository&start=2025-07-01&end=2025-07-31&presence=day&include_all_languages=false&limit=20
+```
+
+Sample response (200 OK):
+```json
+{
+  "kind": "repository",
+  "start": "2025-07-01",
+  "end": "2025-07-31",
+  "presence": "day",
+  "include_all_languages": false,
+  "results": [
+    {"full_name": "owner/repo", "owner": "owner", "days_present": 12, "best_rank": 1}
+  ]
+}
+```
+
+#### GET `/api/v1/top/owners` (repository only)
+
+| Parameter | Type | Required | Valid Values | Description |
+| --- | --- | --- | --- | --- |
+| `start` | string | Yes | `YYYY-MM-DD` | Start date (inclusive) |
+| `end` | string | Yes | `YYYY-MM-DD` | End date (inclusive) |
+| `language` | string | No | slug | Optional language filter |
+| `include_all_languages` | bool | No | `true`, `false` | Whether to include rows where `language IS NULL` |
+| `limit` | int | No | `1..500` | Max results |
+
+Sample request:
+```
+GET /api/v1/top/owners?start=2025-07-01&end=2025-07-31&include_all_languages=false&limit=20
+```
+
+Sample response (200 OK):
+```json
+{
+  "start": "2025-07-01",
+  "end": "2025-07-31",
+  "include_all_languages": false,
+  "results": [
+    {"owner": "owner", "repos_present": 12, "best_rank": 1}
+  ]
+}
+```
+
+#### GET `/api/v1/top/languages`
+Returns languages ranked by total entries within the date range.
+
+| Parameter | Type | Required | Valid Values | Description |
+| --- | --- | --- | --- | --- |
+| `start` | string | Yes | `YYYY-MM-DD` | Start date (inclusive) |
+| `end` | string | Yes | `YYYY-MM-DD` | End date (inclusive) |
+| `kind` | string | No | `repository`, `developer` | Optional kind filter |
+| `include_all_languages` | bool | No | `true`, `false` | Whether to count `language=null` rows |
+| `limit` | int | No | `1..500` | Max results |
+
+Sample request:
+```
+GET /api/v1/top/languages?start=2025-07-01&end=2025-07-31&kind=repository&include_all_languages=false&limit=20
+```
+
+Sample response (200 OK):
+```json
+{
+  "kind": "repository",
+  "start": "2025-07-01",
+  "end": "2025-07-31",
+  "include_all_languages": false,
+  "results": [
+    {"language": "python", "entries": 930},
+    {"language": "javascript", "entries": 870}
+  ]
+}
+```
+
 ## Sprint 001 (Approach 2) - Parquet + DuckDB baseline
 
 Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
@@ -150,9 +324,12 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
   - `.venv/`
   - `**/__pycache__/`
 
-Verification:
-- `python3 -m pytest -q` (exit 0)
-- `python3 -c "import duckdb, pyarrow, fastapi"` (exit 0)
+Positive tests:
+- `python3 -m pytest -q` (exit 0; `.scratch/verification/SPRINT-001/001A/pytest.log`)
+- `python3 -c "import duckdb, pyarrow, fastapi"` (exit 0; `.scratch/verification/SPRINT-001/001A/py-imports.log`)
+
+Negative tests:
+- `mkdir -p analytics && echo test > analytics/.gitignore_test && git status --porcelain | rg \"analytics/.gitignore_test\"` (exit 1 expected; `.scratch/verification/SPRINT-001/001A/gitignore-analytics.log`)
 
 ### 001B - ETL: archive JSON -> canonical Parquet datasets
 - [ ] Implement `analytics-build` to (re)build Parquet from `archive/`:
@@ -178,10 +355,44 @@ Verification:
   - optional: languages-per-date map (to drive UI dropdown without scanning Parquet at request time)
   - row counts per year file
 
-Verification:
-- `python3 -m gh_trending_analytics build --help` (exit 0)
-- `python3 -m gh_trending_analytics build --kind repository --year 2025` (exit 0; parquet + manifest updated)
-- `python3 -m gh_trending_analytics build --kind developer --year 2025` (exit 0; parquet + manifest updated)
+#### Manifest Schema (`analytics/parquet/manifest.json`)
+```json
+{
+  "generated_at": "2026-02-04T00:00:00Z",
+  "kinds": {
+    "repository": {
+      "min_date": "2021-01-01",
+      "max_date": "2026-02-04",
+      "dates": ["2021-01-01", "2021-01-02"],
+      "languages": ["python", "javascript", null],
+      "languages_by_date": {
+        "2021-01-01": ["python", null]
+      },
+      "row_counts_by_year": {"2021": 12345, "2022": 23456}
+    },
+    "developer": {
+      "min_date": "2024-01-01",
+      "max_date": "2026-02-04",
+      "dates": ["2024-01-01"],
+      "languages": ["python", null],
+      "row_counts_by_year": {"2024": 12345}
+    }
+  }
+}
+```
+Notes:
+- `languages` may contain `null` to represent "(all languages)" rows originating from `(null).json`.
+- If we keep `languages_by_date`, the UI can populate language dropdowns without scanning Parquet at request time.
+
+Positive tests:
+- `python3 -m gh_trending_analytics build --help` (exit 0; `.scratch/verification/SPRINT-001/001B/build-help.log`)
+- `python3 -m gh_trending_analytics build --kind repository --year 2025` (exit 0; `.scratch/verification/SPRINT-001/001B/build-repo-2025.log`)
+- `python3 -m gh_trending_analytics build --kind developer --year 2025` (exit 0; `.scratch/verification/SPRINT-001/001B/build-dev-2025.log`)
+
+Negative tests:
+- `python3 -m gh_trending_analytics build --kind invalid --year 2025` (exit non-zero; `.scratch/verification/SPRINT-001/001B/build-invalid-kind.log`)
+- `python3 -m gh_trending_analytics build --kind repository --year not-a-year` (exit non-zero; `.scratch/verification/SPRINT-001/001B/build-invalid-year.log`)
+- `python3 -m gh_trending_analytics build --kind repository --archive ./does-not-exist` (exit non-zero; `.scratch/verification/SPRINT-001/001B/build-missing-archive.log`)
 
 ### 001C - DuckDB query layer (parameterized SQL)
 - [ ] Implement a small query library that:
@@ -193,9 +404,9 @@ Verification:
     - `top_reappearing(kind, start, end, language?, presence_mode, include_all_languages)`
     - `top_owners(start, end, ...)` (repo only)
   - Uses only parameterized queries (no string interpolation of user inputs)
-- [ ] Concurrency decision (document + test):
-  - Preferred: open a DuckDB connection per request (read-only workload) OR keep one shared connection behind a lock.
-  - Avoid sharing one connection concurrently across threads without protection.
+- [ ] Concurrency model (document + test):
+  - **Decision:** connection-per-request (read-only analytics).
+  - **Rationale:** multiple concurrent reads are expected; sharing a single connection across threads invites subtle races.
 - [ ] Define precise SQL semantics for `presence=day`:
   - For repository:
     - `COUNT(DISTINCT date)` grouped by `full_name`
@@ -229,8 +440,14 @@ Verification:
   - at least 2 dates, 2 languages, include `(null).json`, and one entity that appears in multiple languages on the same day
   - tests must prove the difference between `presence=occurrence` and `presence=day`
 
-Verification:
-- `python3 -m pytest -q` (exit 0)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_query_layer.py` (exit 0; `.scratch/verification/SPRINT-001/001C/pytest-query.log`)
+- `python3 -m pytest -q py/tests/test_concurrent_queries.py` (exit 0; `.scratch/verification/SPRINT-001/001C/pytest-concurrency.log`)
+
+Negative tests:
+- Invalid date format is rejected with a helpful error (unit test): `.scratch/verification/SPRINT-001/001C/invalid-date-format.log`
+- SQL injection attempt via `language=python' OR 1=1 --` is rejected by validation (unit test): `.scratch/verification/SPRINT-001/001C/sql-injection-rejected.log`
+- Query on missing date returns a typed "not found" result (unit test) which the HTTP layer maps to 404: `.scratch/verification/SPRINT-001/001C/missing-date-not-found.log`
 
 ### 001D - FastAPI server + minimal UI (day flip + analytics)
 - [ ] Implement FastAPI app:
@@ -248,10 +465,17 @@ Verification:
   - “Top re-appearing repos (distinct days)” over a chosen date range
   - “Top owners by re-appearing repos” over a chosen date range
 
-Verification:
-- `python3 -m gh_trending_web --help` (exit 0)
-- `python3 -m gh_trending_web --archive ./archive --analytics ./analytics --port 8000` (exit 0; server starts)
-- `curl -sf http://127.0.0.1:8000/api/v1/dates?kind=repository | head` (exit 0)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_http_api.py` (exit 0; `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`)
+- `python3 -m gh_trending_web --help` (exit 0; `.scratch/verification/SPRINT-001/001D/web-help.log`)
+- `python3 -m gh_trending_web --archive ./archive --analytics ./analytics --port 8000` (exit 0; `.scratch/verification/SPRINT-001/001D/server-start.log`)
+- `curl -sf http://127.0.0.1:8000/api/v1/dates?kind=repository | head` (exit 0; `.scratch/verification/SPRINT-001/001D/curl-dates.log`)
+
+Negative tests:
+- Invalid date format returns 400 with error envelope: `.scratch/verification/SPRINT-001/001D/http-invalid-date.log`
+- Missing date returns 404 with "available dates" hint: `.scratch/verification/SPRINT-001/001D/http-missing-date.log`
+- Invalid kind returns 400: `.scratch/verification/SPRINT-001/001D/http-invalid-kind.log`
+- SQL injection attempt via `language` is rejected (400) and does not change result set: `.scratch/verification/SPRINT-001/001D/http-sql-injection-rejected.log`
 
 ### 001E - E2E smoke tests (proof the whole stack works)
 - [ ] Add a `scripts/e2e_smoke.sh` (or pytest e2e) that:
@@ -262,8 +486,32 @@ Verification:
     - top_reappearing returns expected counts
     - language filtering does not crash on `c++` / `c#` / `(null)`
 
-Verification:
-- `bash scripts/e2e_smoke.sh` (exit 0)
+Positive tests:
+- `bash scripts/e2e_smoke.sh` (exit 0; `.scratch/verification/SPRINT-001/001E/e2e-smoke.log`)
+
+Negative tests:
+- `bash scripts/e2e_smoke.sh --scenario invalid-language` (exit non-zero; `.scratch/verification/SPRINT-001/001E/e2e-invalid-language.log`)
+- `bash scripts/e2e_smoke.sh --scenario missing-manifest` (exit non-zero; `.scratch/verification/SPRINT-001/001E/e2e-missing-manifest.log`)
+
+### 001E-2 - Contract verification scripts (curl-based)
+- [ ] Add `.scratch/tests/api_contract_curl.sh` that:
+  - Exercises all endpoints via curl (happy + common failure cases)
+  - Validates response content-type headers
+  - Stores JSON responses under `.scratch/verification/SPRINT-001/001E-2/responses/` for diffing
+
+Positive tests:
+- `bash .scratch/tests/api_contract_curl.sh --base-url http://127.0.0.1:8000` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-happy.log`)
+
+Negative tests:
+- `bash .scratch/tests/api_contract_curl.sh --scenario invalid-date` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-invalid-date.log`)
+- `bash .scratch/tests/api_contract_curl.sh --scenario missing-date` (exit 0; `.scratch/verification/SPRINT-001/001E-2/contract-missing-date.log`)
+
+### Acceptance Criteria - Sprint 001
+- [ ] ETL produces valid Parquet files that DuckDB can query without error
+- [ ] Day view returns stable ordering matching source JSON rank
+- [ ] `top/reappearing` with `presence=day` and `presence=occurrence` return different counts for a fixture that duplicates an entity across languages on the same day
+- [ ] Language filter with `c++` and `(null)` does not crash and returns deterministic results
+- [ ] Manifest reflects actual data (min/max dates match filesystem and match Parquet contents)
 
 ## Sprint 002 (Approach 4) - Result caching + pre-warming
 
@@ -276,8 +524,12 @@ Execution order: 002A -> 002B -> 002C.
 - [ ] Define stable cache keys (JSON-serialized params, sorted keys)
 - [ ] Add TTL defaults and max-size bounds
 
-Verification:
-- `python3 -m pytest -q` (exit 0; includes cache behavior tests)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_cache.py` (exit 0; `.scratch/verification/SPRINT-002/002A/pytest-cache.log`)
+
+Negative tests:
+- TTL expiry evicts entries and recomputes results (unit test): `.scratch/verification/SPRINT-002/002A/cache-ttl-expiry.log`
+- Cache key collision test (different params must not share a key): `.scratch/verification/SPRINT-002/002A/cache-key-collision.log`
 
 ### 002B - Pre-warm strategy for fast day flipping
 - [ ] When serving a day view, enqueue pre-warm for:
@@ -288,16 +540,29 @@ Verification:
   - cache hit ratio
   - pre-warm success/failure
 
-Verification:
-- `python3 -m pytest -q` (exit 0)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_prewarm.py` (exit 0; `.scratch/verification/SPRINT-002/002B/pytest-prewarm.log`)
+
+Negative tests:
+- Pre-warm does not enqueue out-of-range dates (unit test): `.scratch/verification/SPRINT-002/002B/prewarm-out-of-range.log`
+- Pre-warm failures do not crash request path (unit test): `.scratch/verification/SPRINT-002/002B/prewarm-failure-safe.log`
 
 ### 002C - Performance budget + regression guardrails
 - [ ] Add a lightweight perf test that asserts:
   - cached day view endpoint responds under a target threshold on local machine
   - top_reappearing over 30/90 days stays within a reasonable bound
 
-Verification:
-- `python3 -m pytest -q` (exit 0)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_perf.py` (exit 0; `.scratch/verification/SPRINT-002/002C/pytest-perf.log`)
+
+Negative tests:
+- If perf budgets regress, `py/tests/test_perf.py` fails with a clear message including actual timings (expected red test)
+
+### Acceptance Criteria - Sprint 002
+- [ ] Cache hit ratio improves for day-flip navigation (demonstrated via logs/counters in a manual run)
+- [ ] Pre-warming loads prev/next day results without increasing p95 latency for the initiating request
+- [ ] Cached day endpoint meets the Sprint 002 performance budget on the local machine
+- [ ] Cache invalidation/TTL behavior is covered by tests
 
 ## Sprint 003 (Approach 3) - Materialized aggregates / rollups
 
@@ -313,8 +578,11 @@ Execution order: 003A -> 003B -> 003C.
   - `repo_day_presence(date, full_name, owner, best_rank, languages_count, in_all_languages)`
   - `dev_day_presence(date, username, best_rank, languages_count, in_all_languages)`
 
-Verification:
-- `python3 -m pytest -q` (exit 0; includes rollup semantics tests)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_rollup_semantics.py` (exit 0; `.scratch/verification/SPRINT-003/003A/pytest-rollup-semantics.log`)
+
+Negative tests:
+- Rollup builder rejects inconsistent inputs (e.g., missing required columns) with a helpful error: `.scratch/verification/SPRINT-003/003A/rollup-bad-input.log`
 
 ### 003B - Incremental rollup builder + storage format
 - [ ] Implement `analytics-rollup` command that:
@@ -324,9 +592,12 @@ Verification:
 - [ ] Update query layer to use rollups when the query can be answered from them
   - (must be correctness-preserving; fall back to raw tables if unsure)
 
-Verification:
-- `python3 -m gh_trending_analytics rollup --help` (exit 0)
-- `python3 -m pytest -q` (exit 0)
+Positive tests:
+- `python3 -m gh_trending_analytics rollup --help` (exit 0; `.scratch/verification/SPRINT-003/003B/rollup-help.log`)
+- `python3 -m pytest -q py/tests/test_rollup_builder.py` (exit 0; `.scratch/verification/SPRINT-003/003B/pytest-rollup-builder.log`)
+
+Negative tests:
+- Corrupt rollup file triggers safe fallback to raw queries (integration test): `.scratch/verification/SPRINT-003/003B/rollup-corrupt-fallback.log`
 
 ### 003C - Extend analytics endpoints (streaks + advanced toplists)
 - [ ] Add endpoints:
@@ -334,8 +605,18 @@ Verification:
   - `GET /api/v1/top/newcomers?kind=repository&start=...&end=...` (first_seen within window)
 - [ ] Add tests for streak calculations (edge cases: gaps, duplicates across languages, include/exclude all-languages)
 
-Verification:
-- `bash scripts/e2e_smoke.sh` (exit 0)
+Positive tests:
+- `python3 -m pytest -q py/tests/test_streaks.py` (exit 0; `.scratch/verification/SPRINT-003/003C/pytest-streaks.log`)
+- `bash scripts/e2e_smoke.sh` (exit 0; `.scratch/verification/SPRINT-003/003C/e2e-smoke.log`)
+
+Negative tests:
+- Streak query rejects invalid ranges (`start > end`) with 400: `.scratch/verification/SPRINT-003/003C/http-invalid-range.log`
+
+### Acceptance Criteria - Sprint 003
+- [ ] Rollups preserve semantics: results match raw-table queries for covered endpoints (proved by parity tests)
+- [ ] Rollup rebuild can run incrementally without dropping/duplicating days
+- [ ] New endpoints (streaks/newcomers) have both happy-path and edge-case test coverage
+- [ ] Query layer prefers rollups for supported queries and falls back safely when rollups are missing/corrupt
 
 ### Note (post-003 follow-up): When to consider Approach 1 (Star-schema SQL)
 If any of the following becomes true, consider migrating the analytics store to SQLite/Postgres (or generating a SQLite file for distribution):
@@ -350,6 +631,7 @@ In that follow-up, keep the Parquet datasets as the immutable “source of truth
 - Double counting across `(null)` and per-language lists: must make `include_all_languages` explicit and tested.
 - Special characters in language slugs and filenames (`c++`, `c#`): ensure URL encoding/decoding is correct end-to-end.
 - “Developers” data begins later than repositories: UI must handle missing kinds/dates gracefully.
+- Recovery/rollback: `analytics/` and `.scratch/` are derived artifacts; if anything gets wedged or corrupted, delete them and re-run `analytics-build` / `analytics-rollup`.
 
 ## Non-goals (for these sprints)
 - No GitHub API enrichment (stars, descriptions, topics) - can be added later.
