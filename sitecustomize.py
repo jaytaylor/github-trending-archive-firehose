@@ -5,7 +5,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PY_DIR = ROOT / "py"
+LEGACY_DIR = ROOT / "legacy"
 if PY_DIR.is_dir():
     path = str(PY_DIR)
+    if path not in sys.path:
+        sys.path.insert(0, path)
+if LEGACY_DIR.is_dir():
+    path = str(LEGACY_DIR)
     if path not in sys.path:
         sys.path.insert(0, path)

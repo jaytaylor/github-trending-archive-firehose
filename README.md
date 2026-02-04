@@ -41,7 +41,7 @@ PYTHONPATH=py uv run python -m gh_trending_analytics build --kind developer
 
 Start the webserver:
 ```
-PYTHONPATH=py uv run python -m gh_trending_web --analytics ./analytics --port 8000
+PYTHONPATH=py:legacy uv run python -m gh_trending_web --analytics ./analytics --port 8000
 ```
 
 Then open:

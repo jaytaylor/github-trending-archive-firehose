@@ -426,7 +426,7 @@ Command: `uv run python -m pytest -q`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001A/pytest.log`
 ```
-  - `py/gh_trending_web/` (server)
+  - `legacy/gh_trending_web/` (server)
   - `py/gh_trending_analytics/` (ETL + query layer)
   - `py/tests/` (pytest)
 - [X] Add documented `uv` command entrypoints and Makefile wrappers for build/test (precommit guard):
@@ -434,7 +434,7 @@ Evidence: `.scratch/verification/SPRINT-001/001A/pytest.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `PYTHONPATH=py uv run python -m gh_trending_web --help`
+Command: `PYTHONPATH=py:legacy uv run python -m gh_trending_web --help`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001D/web-help.log`
 
@@ -451,7 +451,7 @@ Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001A/make-test.log`
 ```
   - `uv run python -m pytest -q`
-  - `PYTHONPATH=py uv run python -m gh_trending_web --help` (CLI help)
+  - `PYTHONPATH=py:legacy uv run python -m gh_trending_web --help` (CLI help)
   - `PYTHONPATH=py uv run python -m gh_trending_analytics build --help` (build parquet from archive)
   - `make -j10 build`
   - `make -j10 test`
@@ -754,7 +754,7 @@ Evidence: `.scratch/verification/SPRINT-001/001D/http-invalid-date.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `rg -n "prev-button|next-button|language-select|fetchDay" py/gh_trending_web/templates/day.html`
+Command: `rg -n "prev-button|next-button|language-select|fetchDay" legacy/gh_trending_web/templates/day.html`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001D/ui-template-check.log`
 ```
@@ -765,7 +765,7 @@ Evidence: `.scratch/verification/SPRINT-001/001D/ui-template-check.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `rg -n "Top reappearing|Top owners" py/gh_trending_web/templates/day.html`
+Command: `rg -n "Top reappearing|Top owners" legacy/gh_trending_web/templates/day.html`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001D/metrics-template-check.log`
 ```
@@ -774,7 +774,7 @@ Evidence: `.scratch/verification/SPRINT-001/001D/metrics-template-check.log`
 
 Positive tests:
 - `uv run python -m pytest -q py/tests/test_http_api.py` (exit 0; `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`)
-- `PYTHONPATH=py uv run python -m gh_trending_web --help` (exit 0; `.scratch/verification/SPRINT-001/001D/web-help.log`)
+- `PYTHONPATH=py:legacy uv run python -m gh_trending_web --help` (exit 0; `.scratch/verification/SPRINT-001/001D/web-help.log`)
 - `bash .scratch/verification/SPRINT-001/001D/run_server_smoke.sh` (exit 0; `.scratch/verification/SPRINT-001/001D/server-start.log`, `.scratch/verification/SPRINT-001/001D/curl-dates.log`)
 
 Negative tests:
@@ -798,7 +798,7 @@ Evidence: `.scratch/verification/SPRINT-001/001D/pytest-http-api.log`
 Verified via the command/evidence blocks below; logs captured under the corresponding .scratch/verification/SPRINT-00X/<task-id>/ directory.
 ```
 ```text
-Command: `rg -n "prev-button|next-button|language-select|fetchDay" py/gh_trending_web/templates/day.html`
+Command: `rg -n "prev-button|next-button|language-select|fetchDay" legacy/gh_trending_web/templates/day.html`
 Exit code: `0`
 Evidence: `.scratch/verification/SPRINT-001/001D/ui-template-check.log`
 ```
