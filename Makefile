@@ -1,6 +1,6 @@
 MAKEFLAGS += -j10
 
-.PHONY: precommit build test
+.PHONY: precommit build test dev-legacy
 
 YEAR ?= $(shell date +%Y)
 
@@ -14,3 +14,6 @@ build: precommit
 
 test: precommit
 	uv run python -m pytest -q
+
+dev-legacy: precommit
+	PYTHONPATH=py:legacy uv run python -m gh_trending_web --analytics ./analytics --port 8000
