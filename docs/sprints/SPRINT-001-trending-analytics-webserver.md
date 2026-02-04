@@ -75,7 +75,7 @@ Keep generated artifacts out of `archive/` and clearly separate from source:
 - `analytics/parquet/` - canonical row datasets (read-mostly)
 - `analytics/rollups/` - derived aggregates (read-mostly)
 - `analytics/duckdb/analytics.duckdb` - optional persisted DuckDB catalog (views + metadata)
-- `.scratch/verification/SPRINT-001/` - evidence artifacts while implementing
+- `.scratch/verification/SPRINT-00X/` - evidence artifacts while implementing (Sprint 001 -> `SPRINT-001/`, etc.)
 
 ### Execution guardrails (learned from a “good” sprint plan)
 - Keep the work in-order (Sprint 001 -> 002 -> 003). Do not start caching/rollups until baseline semantics are proven by tests.
@@ -85,6 +85,19 @@ Keep generated artifacts out of `archive/` and clearly separate from source:
   - correct `(null)`/all-languages behavior
 - Prefer “small, explicit helpers” over clever one-off SQL strings scattered in route handlers.
 - Ensure generated artifacts are ignored by git (`analytics/`, `.scratch/`, `.venv/`, `__pycache__/`).
+- After completing each sprint, run the acceptance checks and capture the logs under `.scratch/verification/SPRINT-00X/<sprint>/...`.
+
+### Evidence + verification logging plan
+- Put every probe, fixture, and evidence artifact under `.scratch/`.
+- For each task, store logs under `.scratch/verification/SPRINT-00X/<task-id>/...` (e.g. Sprint 001 task 001B -> `.scratch/verification/SPRINT-001/001B/`).
+- Capture command output and exit code. Example pattern:
+  ```bash
+  set -o pipefail
+  cmd="python3 -m pytest -q py/tests/test_query_layer.py"
+  (bash -lc "$cmd"; echo "exit_code=$?") 2>&1 | tee .scratch/verification/SPRINT-001/001C/pytest-query.log
+  ```
+- For contract tests, store the raw JSON responses on disk (for diffing/regression) in addition to the curl transcript log.
+- For any manual UI verification, record a short markdown note + screenshots under `.scratch/verification/SPRINT-00X/<task-id>/manual/`.
 
 ## Data Model (canonical rows)
 
@@ -302,6 +315,12 @@ Sample response (200 OK):
 }
 ```
 
+## Test Strategy
+- Unit: ETL parsing/normalization + DuckDB query semantics (`presence=day` vs `presence=occurrence`, `(null)` behavior).
+- Integration: FastAPI routes with `TestClient` (400/404 behavior, content-type, stable ordering).
+- Contract: curl-based scripts against a running server, storing responses for diffing.
+- E2E: a smoke script that builds from a tiny fixture, boots the server, and validates the primary flows.
+
 ## Sprint 001 (Approach 2) - Parquet + DuckDB baseline
 
 Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
@@ -310,6 +329,7 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
 - [ ] Add `pyproject.toml` (or `requirements.txt` if preferred) for:
   - runtime: `fastapi`, `uvicorn`, `duckdb`, `pyarrow`, `jinja2`
   - test: `pytest`, `httpx`
+  - dev: `ruff` (lint + format); optional: `mypy` (types)
 - [ ] Add module layout (example):
   - `py/gh_trending_web/` (server)
   - `py/gh_trending_analytics/` (ETL + query layer)
@@ -318,6 +338,7 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
   - `make py-test`
   - `make py-run` (starts server)
   - `make analytics-build` (build parquet from archive)
+  - `make precommit` (runs lint/format + tests)
 - [ ] Update `.gitignore` to exclude:
   - `analytics/`
   - `.scratch/`
@@ -327,6 +348,7 @@ Execution order: 001A -> 001B -> 001C -> 001D -> 001E.
 Positive tests:
 - `python3 -m pytest -q` (exit 0; `.scratch/verification/SPRINT-001/001A/pytest.log`)
 - `python3 -c "import duckdb, pyarrow, fastapi"` (exit 0; `.scratch/verification/SPRINT-001/001A/py-imports.log`)
+- `make precommit` (exit 0; `.scratch/verification/SPRINT-001/001A/make-precommit.log`)
 
 Negative tests:
 - `mkdir -p analytics && echo test > analytics/.gitignore_test && git status --porcelain | rg \"analytics/.gitignore_test\"` (exit 1 expected; `.scratch/verification/SPRINT-001/001A/gitignore-analytics.log`)
@@ -513,6 +535,11 @@ Negative tests:
 - [ ] Language filter with `c++` and `(null)` does not crash and returns deterministic results
 - [ ] Manifest reflects actual data (min/max dates match filesystem and match Parquet contents)
 
+Acceptance verification (capture logs under `.scratch/verification/SPRINT-001/acceptance/`):
+- `make precommit` (exit 0; `.scratch/verification/SPRINT-001/acceptance/make-precommit.log`)
+- `bash scripts/e2e_smoke.sh` (exit 0; `.scratch/verification/SPRINT-001/acceptance/e2e-smoke.log`)
+- `bash .scratch/tests/api_contract_curl.sh --base-url http://127.0.0.1:8000` (exit 0; `.scratch/verification/SPRINT-001/acceptance/api-contract.log`)
+
 ## Sprint 002 (Approach 4) - Result caching + pre-warming
 
 Execution order: 002A -> 002B -> 002C.
@@ -563,6 +590,10 @@ Negative tests:
 - [ ] Pre-warming loads prev/next day results without increasing p95 latency for the initiating request
 - [ ] Cached day endpoint meets the Sprint 002 performance budget on the local machine
 - [ ] Cache invalidation/TTL behavior is covered by tests
+
+Acceptance verification (capture logs under `.scratch/verification/SPRINT-002/acceptance/`):
+- `make precommit` (exit 0; `.scratch/verification/SPRINT-002/acceptance/make-precommit.log`)
+- `python3 -m pytest -q py/tests/test_perf.py` (exit 0; `.scratch/verification/SPRINT-002/acceptance/pytest-perf.log`)
 
 ## Sprint 003 (Approach 3) - Materialized aggregates / rollups
 
@@ -617,6 +648,11 @@ Negative tests:
 - [ ] Rollup rebuild can run incrementally without dropping/duplicating days
 - [ ] New endpoints (streaks/newcomers) have both happy-path and edge-case test coverage
 - [ ] Query layer prefers rollups for supported queries and falls back safely when rollups are missing/corrupt
+
+Acceptance verification (capture logs under `.scratch/verification/SPRINT-003/acceptance/`):
+- `make precommit` (exit 0; `.scratch/verification/SPRINT-003/acceptance/make-precommit.log`)
+- `python3 -m pytest -q py/tests/test_rollup_builder.py` (exit 0; `.scratch/verification/SPRINT-003/acceptance/pytest-rollup-builder.log`)
+- `python3 -m pytest -q py/tests/test_rollup_semantics.py` (exit 0; `.scratch/verification/SPRINT-003/acceptance/pytest-rollup-semantics.log`)
 
 ### Note (post-003 follow-up): When to consider Approach 1 (Star-schema SQL)
 If any of the following becomes true, consider migrating the analytics store to SQLite/Postgres (or generating a SQLite file for distribution):
