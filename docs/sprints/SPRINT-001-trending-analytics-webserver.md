@@ -47,12 +47,10 @@ We want:
 - Fast dynamic analytics (group-by, distinct-days, streaks, filters)
 - A data model that is explicit about semantics (per-day vs per-(day,language) appearances, and how to treat “all languages” `(null).json`)
 
-## Open Questions (answer early in Sprint 001)
-- Default `include_all_languages` behavior for range endpoints (recommend default `false` to avoid accidental double-counting).
-- For “re-appearing” metrics, do we want to rank by:
-  - `days_present` only, or
-  - tie-break by `best_rank` / `avg_rank` / recency?
-- Should the UI show repo entries from `(null).json` by default when present, even if a language filter is selected?
+## Open Questions (answered in Sprint 001)
+- Default `include_all_languages` behavior for range endpoints: default `false` to avoid accidental double-counting.
+- For “re-appearing” metrics: rank by `days_present`, then tie-break by `best_rank`, then by name.
+- UI behavior for `(null).json`: default to `__all__` when available, but a selected language filter excludes `(null)` rows to avoid mixing.
 
 ## Current State Snapshot (repo review)
 - Scraper writes JSON in `src/main.ts` into `archive/*/<year>/<date>/*.json` with:
