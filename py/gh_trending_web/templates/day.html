@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Trending Archive - {{ title }}</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+        background: #f6f4ef;
+        color: #1f1f1f;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .controls,
+      .metrics {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        margin-bottom: 20px;
+      }
+      .panel {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+      select,
+      input,
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #c9c6c1;
+        font-size: 14px;
+        background: #fff;
+      }
+      button {
+        cursor: pointer;
+        background: #263238;
+        color: #fff;
+        border: none;
+      }
+      button:disabled {
+        background: #8c8c8c;
+        cursor: not-allowed;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid #ece7df;
+      }
+      .muted {
+        color: #6d6a66;
+        font-size: 13px;
+      }
+      .nav-buttons {
+        display: flex;
+        gap: 8px;
+      }
+      .nav-buttons button {
+        flex: 1;
+      }
+      .metrics-results {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+      .metrics-results ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .metrics-results li {
+        padding: 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>{{ title }}</h1>
+      <div class="muted">GitHub Trending Archive Analytics</div>
+    </header>
+
+    <section class="panel controls">
+      <div>
+        <label>Date</label>
+        <select id="date-select"></select>
+      </div>
+      <div>
+        <label>Language</label>
+        <select id="language-select"></select>
+      </div>
+      <div class="nav-buttons">
+        <button id="prev-button">Prev</button>
+        <button id="next-button">Next</button>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="refresh-button">Refresh</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Daily Snapshot</h2>
+      <div id="snapshot-meta" class="muted"></div>
+      <table id="entries-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="panel metrics">
+      <div>
+        <label>Range start</label>
+        <input id="range-start" type="date" />
+      </div>
+      <div>
+        <label>Range end</label>
+        <input id="range-end" type="date" />
+      </div>
+      <div>
+        <label>Presence</label>
+        <select id="presence-select">
+          <option value="day">Distinct days</option>
+          <option value="occurrence">Occurrences</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button id="run-metrics">Run metrics</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Metrics</h2>
+      <div class="metrics-results">
+        <div>
+          <h3>Top reappearing</h3>
+          <ul id="reappearing-list"></ul>
+        </div>
+        <div id="owners-panel" style="display: none;">
+          <h3>Top owners</h3>
+          <ul id="owners-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const kind = "{{ kind }}";
+      const dates = {{ dates | tojson }};
+      const languagesByDate = {{ languages_by_date | tojson }};
+      const globalLanguages = {{ global_languages | tojson }};
+      let selectedDate = "{{ selected_date }}";
+      let selectedLanguage = "{{ selected_language }}";
+
+      const dateSelect = document.getElementById("date-select");
+      const languageSelect = document.getElementById("language-select");
+      const prevButton = document.getElementById("prev-button");
+      const nextButton = document.getElementById("next-button");
+      const refreshButton = document.getElementById("refresh-button");
+      const snapshotMeta = document.getElementById("snapshot-meta");
+      const entriesTableHead = document.querySelector("#entries-table thead");
+      const entriesTableBody = document.querySelector("#entries-table tbody");
+      const rangeStart = document.getElementById("range-start");
+      const rangeEnd = document.getElementById("range-end");
+      const presenceSelect = document.getElementById("presence-select");
+      const runMetrics = document.getElementById("run-metrics");
+      const reappearingList = document.getElementById("reappearing-list");
+      const ownersPanel = document.getElementById("owners-panel");
+      const ownersList = document.getElementById("owners-list");
+
+      function normalizeLanguage(value) {
+        return value === null ? "__all__" : value;
+      }
+
+      function populateDateOptions() {
+        dateSelect.innerHTML = "";
+        dates.forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          if (value === selectedDate) {
+            option.selected = true;
+          }
+          dateSelect.appendChild(option);
+        });
+      }
+
+      function populateLanguageOptions() {
+        const languages = languagesByDate[selectedDate] || globalLanguages || [];
+        languageSelect.innerHTML = "";
+        const normalized = languages.map(normalizeLanguage);
+        const unique = Array.from(new Set(normalized));
+        unique.forEach((value) => {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value === "__all__" ? "All" : value;
+          if (value === selectedLanguage) {
+            option.selected = true;
+          }
+          languageSelect.appendChild(option);
+        });
+      }
+
+      function updateNavButtons() {
+        const index = dates.indexOf(selectedDate);
+        prevButton.disabled = index <= 0;
+        nextButton.disabled = index >= dates.length - 1;
+      }
+
+      function setDate(value) {
+        selectedDate = value;
+        populateDateOptions();
+        populateLanguageOptions();
+        updateNavButtons();
+        fetchDay();
+      }
+
+      async function fetchDay() {
+        const languageParam = encodeURIComponent(selectedLanguage);
+        const url = `/api/v1/day?kind=${kind}&date=${selectedDate}&language=${languageParam}`;
+        const response = await fetch(url);
+        const payload = await response.json();
+        if (!response.ok) {
+          snapshotMeta.textContent = payload.message || "Failed to load data";
+          entriesTableHead.innerHTML = "";
+          entriesTableBody.innerHTML = "";
+          return;
+        }
+        snapshotMeta.textContent = `Showing ${payload.entries.length} entries for ${payload.date}`;
+        renderEntries(payload.entries);
+      }
+
+      function renderEntries(entries) {
+        entriesTableHead.innerHTML = "";
+        entriesTableBody.innerHTML = "";
+        if (kind === "repository") {
+          entriesTableHead.innerHTML = "<tr><th>Rank</th><th>Repository</th><th>Owner</th></tr>";
+          entries.forEach((entry) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${entry.rank}</td><td>${entry.full_name}</td><td>${entry.owner}</td>`;
+            entriesTableBody.appendChild(row);
+          });
+        } else {
+          entriesTableHead.innerHTML = "<tr><th>Rank</th><th>Username</th></tr>";
+          entries.forEach((entry) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${entry.rank}</td><td>${entry.username}</td>`;
+            entriesTableBody.appendChild(row);
+          });
+        }
+      }
+
+      async function runToplists() {
+        const start = rangeStart.value;
+        const end = rangeEnd.value;
+        if (!start || !end) {
+          return;
+        }
+        const languageParam = selectedLanguage === "__all__" ? "" : `&language=${encodeURIComponent(selectedLanguage)}`;
+        const presence = presenceSelect.value;
+        const reappearingUrl = `/api/v1/top/reappearing?kind=${kind}&start=${start}&end=${end}${languageParam}&presence=${presence}&include_all_languages=false&limit=10`;
+        const reappearingRes = await fetch(reappearingUrl);
+        const reappearingPayload = await reappearingRes.json();
+        reappearingList.innerHTML = "";
+        (reappearingPayload.results || []).forEach((entry) => {
+          const label = kind === "repository" ? entry.full_name : entry.username;
+          const li = document.createElement("li");
+          li.textContent = `${label} — ${entry.days_present} days (best rank ${entry.best_rank})`;
+          reappearingList.appendChild(li);
+        });
+
+        if (kind === "repository") {
+          ownersPanel.style.display = "block";
+          const ownersUrl = `/api/v1/top/owners?start=${start}&end=${end}${languageParam}&include_all_languages=false&limit=10`;
+          const ownersRes = await fetch(ownersUrl);
+          const ownersPayload = await ownersRes.json();
+          ownersList.innerHTML = "";
+          (ownersPayload.results || []).forEach((entry) => {
+            const li = document.createElement("li");
+            li.textContent = `${entry.owner} — ${entry.repos_present} repos (best rank ${entry.best_rank})`;
+            ownersList.appendChild(li);
+          });
+        }
+      }
+
+      dateSelect.addEventListener("change", (event) => {
+        setDate(event.target.value);
+      });
+      languageSelect.addEventListener("change", (event) => {
+        selectedLanguage = event.target.value;
+        fetchDay();
+      });
+      prevButton.addEventListener("click", () => {
+        const index = dates.indexOf(selectedDate);
+        if (index > 0) {
+          setDate(dates[index - 1]);
+        }
+      });
+      nextButton.addEventListener("click", () => {
+        const index = dates.indexOf(selectedDate);
+        if (index < dates.length - 1) {
+          setDate(dates[index + 1]);
+        }
+      });
+      refreshButton.addEventListener("click", () => fetchDay());
+      runMetrics.addEventListener("click", () => runToplists());
+
+      populateDateOptions();
+      populateLanguageOptions();
+      updateNavButtons();
+      rangeStart.value = dates[0] || "";
+      rangeEnd.value = dates[dates.length - 1] || "";
+      if (selectedDate) {
+        fetchDay();
+      }
+    </script>
+  </body>
+</html>
