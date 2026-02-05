@@ -1,0 +1,121 @@
+name: deploy-pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "archive/**"
+      - "web/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build Pages artifact
+        run: |
+          set -euo pipefail
+          site_dir=".scratch/pages"
+          rm -rf "$site_dir"
+          mkdir -p "$site_dir/api"
+          rsync -a web/ "$site_dir/"
+          rsync -a archive/ "$site_dir/archive/"
+          node <<'NODE'
+          const fs = require("fs")
+          const path = require("path")
+
+          const archiveRoot = path.join(process.cwd(), "archive")
+          const outputPath = path.join(process.cwd(), ".scratch/pages/api/manifest.json")
+          const kinds = ["repository", "developer"]
+
+          function listDirs(dir) {
+            if (!fs.existsSync(dir)) {
+              return []
+            }
+            return fs
+              .readdirSync(dir, {withFileTypes: true})
+              .filter((entry) => entry.isDirectory())
+              .map((entry) => entry.name)
+          }
+
+          function listFiles(dir) {
+            if (!fs.existsSync(dir)) {
+              return []
+            }
+            return fs
+              .readdirSync(dir, {withFileTypes: true})
+              .filter((entry) => entry.isFile())
+              .map((entry) => entry.name)
+          }
+
+          function isYear(value) {
+            return /^\\d{4}$/.test(value)
+          }
+
+          function isIsoDate(value) {
+            return /^\\d{4}-\\d{2}-\\d{2}$/.test(value)
+          }
+
+          const manifest = {}
+
+          for (const kind of kinds) {
+            const kindRoot = path.join(archiveRoot, kind)
+            const years = listDirs(kindRoot).filter(isYear).sort()
+            const dates = []
+            const languagesByDate = {}
+
+            for (const year of years) {
+              const yearRoot = path.join(kindRoot, year)
+              const dayDirs = listDirs(yearRoot).filter(isIsoDate).sort()
+              for (const day of dayDirs) {
+                dates.push(day)
+                const dayRoot = path.join(yearRoot, day)
+                const languages = listFiles(dayRoot)
+                  .filter((name) => name.endsWith(".json"))
+                  .map((name) => name.replace(/\\.json$/, \"\"))
+                  .sort()
+                languagesByDate[day] = languages
+              }
+            }
+
+            dates.sort()
+            const latestDate = dates.length > 0 ? dates[dates.length - 1] : null
+
+            manifest[kind] = {
+              latestDate,
+              languagesByDate,
+            }
+          }
+
+          fs.mkdirSync(path.dirname(outputPath), {recursive: true})
+          fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2))
+          NODE
+          touch "$site_dir/.nojekyll"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .scratch/pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
