@@ -15,6 +15,16 @@ const searchMeta = document.getElementById("search-meta")
 const resultsBody = document.getElementById("results-body")
 const resultsCount = document.getElementById("results-count")
 
+const basePath = window.location.pathname.replace(/[^/]*$/, "")
+const apiBase = `${basePath}api`
+const archiveBase = `${basePath}archive`
+
+const MAX_SEARCH_DAYS = 370
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+let apiMode = "server"
+let staticManifest = null
+
 function setMeta(el, message, isError = false) {
   el.textContent = message
   el.classList.toggle("error", isError)
@@ -27,6 +37,19 @@ async function fetchJson(url) {
     throw new Error(payload.error || `Request failed: ${res.status}`)
   }
   return res.json()
+}
+
+function normalizeLanguageParam(value) {
+  if (!value || value === "all") {
+    return "(null)"
+  }
+  return value
+}
+
+function buildArchiveUrl(type, date, language) {
+  const year = date.slice(0, 4)
+  const encoded = encodeURIComponent(language)
+  return `${archiveBase}/${type}/${year}/${date}/${encoded}.json`
 }
 
 function formatLanguageLabel(value) {
@@ -69,10 +92,173 @@ function setResults(rows) {
   })
 }
 
+async function resolveApiMode() {
+  try {
+    staticManifest = await fetchJson(`${apiBase}/manifest.json`)
+    apiMode = "static"
+  } catch (error) {
+    apiMode = "server"
+  }
+}
+
+async function apiLatest(type) {
+  if (apiMode === "static") {
+    const latestDate = staticManifest?.[type]?.latestDate ?? null
+    return {date: latestDate}
+  }
+  return fetchJson(`${apiBase}/latest?type=${type}`)
+}
+
+async function apiLanguages(type, date) {
+  if (apiMode === "static") {
+    const languages = staticManifest?.[type]?.languagesByDate?.[date]
+    if (!languages) {
+      throw new Error(`No languages found for ${date}.`)
+    }
+    return {date, languages}
+  }
+  return fetchJson(`${apiBase}/languages?type=${type}&date=${date}`)
+}
+
+async function apiSnapshot(type, date, language) {
+  const normalizedLanguage = normalizeLanguageParam(language)
+  if (apiMode === "static") {
+    return fetchJson(buildArchiveUrl(type, date, normalizedLanguage))
+  }
+  return fetchJson(
+    `${apiBase}/snapshot?type=${type}&date=${date}&language=${encodeURIComponent(normalizedLanguage)}`
+  )
+}
+
+async function apiSearch({type, query, start, end, language, limit}) {
+  const normalizedLanguage = normalizeLanguageParam(language)
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 500) : 200
+
+  if (apiMode === "static") {
+    return searchStatic({
+      type,
+      query,
+      start,
+      end,
+      language: normalizedLanguage,
+      limit: safeLimit,
+    })
+  }
+
+  const params = new URLSearchParams({
+    type,
+    query,
+    start,
+    end,
+    language: normalizedLanguage,
+    limit: String(safeLimit),
+  })
+  return fetchJson(`${apiBase}/search?${params.toString()}`)
+}
+
+async function searchStatic({type, query, start, end, language, limit}) {
+  if (!isIsoDate(start) || !isIsoDate(end)) {
+    throw new Error("start/end must be YYYY-MM-DD")
+  }
+
+  const startDate = parseIsoDate(start)
+  const endDate = parseIsoDate(end)
+  if (!startDate || !endDate || startDate.getTime() > endDate.getTime()) {
+    throw new Error("invalid date range")
+  }
+
+  const rangeDays = Math.floor((endDate.getTime() - startDate.getTime()) / MS_PER_DAY) + 1
+  if (rangeDays > MAX_SEARCH_DAYS) {
+    throw new Error(`date range too large (max ${MAX_SEARCH_DAYS} days)`)
+  }
+
+  const normalizedQuery = query.trim().toLowerCase()
+  const results = []
+
+  for (const dateValue of enumerateDates(startDate, endDate)) {
+    let payload
+    try {
+      payload = await fetchJson(buildArchiveUrl(type, dateValue, language))
+    } catch (error) {
+      continue
+    }
+
+    if (!payload || !Array.isArray(payload.list)) {
+      continue
+    }
+
+    for (let index = 0; index < payload.list.length; index += 1) {
+      const entry = payload.list[index]
+      if (typeof entry !== "string") {
+        continue
+      }
+
+      if (!entry.toLowerCase().includes(normalizedQuery)) {
+        continue
+      }
+
+      results.push({
+        date: dateValue,
+        language: payload.language ?? null,
+        rank: index + 1,
+        name: entry,
+      })
+
+      if (results.length >= limit) {
+        return {count: results.length, results}
+      }
+    }
+  }
+
+  return {count: results.length, results}
+}
+
+function isIsoDate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
+function parseIsoDate(value) {
+  if (!isIsoDate(value)) {
+    return null
+  }
+
+  const [year, month, day] = value.split("-").map((part) => Number.parseInt(part, 10))
+  if (!year || !month || !day) {
+    return null
+  }
+
+  const date = new Date(Date.UTC(year, month - 1, day))
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null
+  }
+
+  return date
+}
+
+function formatIsoDate(date) {
+  return [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate()]
+    .map((value) => String(value).padStart(2, "0"))
+    .join("-")
+}
+
+function enumerateDates(startDate, endDate) {
+  const dates = []
+  const cursor = new Date(startDate.getTime())
+  while (cursor.getTime() <= endDate.getTime()) {
+    dates.push(formatIsoDate(cursor))
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+  return dates
+}
+
 async function populateLatestDates() {
   const [repoLatest, devLatest] = await Promise.all([
-    fetchJson(`/api/latest?type=repository`),
-    fetchJson(`/api/latest?type=developer`),
+    apiLatest("repository"),
+    apiLatest("developer"),
   ])
 
   if (repoLatest.date) {
@@ -82,7 +268,7 @@ async function populateLatestDates() {
 
   if (repoLatest.date && !searchStart.value) {
     const end = new Date(repoLatest.date)
-    const start = new Date(end.getTime() - 6 * 24 * 60 * 60 * 1000)
+    const start = new Date(end.getTime() - 6 * MS_PER_DAY)
     searchStart.value = start.toISOString().slice(0, 10)
   }
 
@@ -96,24 +282,28 @@ async function populateLanguages() {
     return
   }
 
-  const data = await fetchJson(`/api/languages?type=${snapshotType.value}&date=${snapshotDate.value}`)
-  snapshotLanguage.innerHTML = ""
+  try {
+    const data = await apiLanguages(snapshotType.value, snapshotDate.value)
+    snapshotLanguage.innerHTML = ""
 
-  data.languages.forEach((lang) => {
-    const option = document.createElement("option")
-    option.value = lang
-    option.textContent = formatLanguageLabel(lang)
-    snapshotLanguage.appendChild(option)
-  })
+    data.languages.forEach((lang) => {
+      const option = document.createElement("option")
+      option.value = lang
+      option.textContent = formatLanguageLabel(lang)
+      snapshotLanguage.appendChild(option)
+    })
 
-  if (!data.languages.includes("(null)")) {
-    const option = document.createElement("option")
-    option.value = "(null)"
-    option.textContent = "All languages"
-    snapshotLanguage.appendChild(option)
+    if (!data.languages.includes("(null)")) {
+      const option = document.createElement("option")
+      option.value = "(null)"
+      option.textContent = "All languages"
+      snapshotLanguage.appendChild(option)
+    }
+
+    snapshotLanguage.value = "(null)"
+  } catch (error) {
+    setMeta(snapshotMeta, error.message, true)
   }
-
-  snapshotLanguage.value = "(null)"
 }
 
 snapshotType.addEventListener("change", async () => {
@@ -129,8 +319,10 @@ snapshotForm.addEventListener("submit", async (event) => {
   event.preventDefault()
   setMeta(snapshotMeta, "Loading snapshot...")
   try {
-    const data = await fetchJson(
-      `/api/snapshot?type=${snapshotType.value}&date=${snapshotDate.value}&language=${snapshotLanguage.value}`
+    const data = await apiSnapshot(
+      snapshotType.value,
+      snapshotDate.value,
+      snapshotLanguage.value
     )
 
     const rows = data.list.map((name, idx) => ({
@@ -154,9 +346,14 @@ searchForm.addEventListener("submit", async (event) => {
   const language = searchLanguage.value.trim() || "(null)"
 
   try {
-    const data = await fetchJson(
-      `/api/search?type=${searchType.value}&query=${encodeURIComponent(searchQuery.value)}&start=${searchStart.value}&end=${searchEnd.value}&language=${encodeURIComponent(language)}`
-    )
+    const data = await apiSearch({
+      type: searchType.value,
+      query: searchQuery.value,
+      start: searchStart.value,
+      end: searchEnd.value,
+      language,
+      limit: 200,
+    })
 
     setResults(data.results)
     setMeta(searchMeta, `${data.count} matches.`)
@@ -166,6 +363,7 @@ searchForm.addEventListener("submit", async (event) => {
 })
 
 async function init() {
+  await resolveApiMode()
   await populateLatestDates()
   await populateLanguages()
   searchLanguage.value = "(null)"
