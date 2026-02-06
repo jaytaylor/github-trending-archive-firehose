@@ -100,7 +100,7 @@ function formatRelativeAge(value) {
   }
 
   const totalSeconds = Math.max(0, Math.floor(deltaMs / 1000))
-  if (totalSeconds < 60) {
+  if (totalSeconds <= 60) {
     return `${totalSeconds}s ago`
   }
 
@@ -120,7 +120,17 @@ function formatRelativeAge(value) {
   }
 
   const totalWeeks = Math.floor(totalDays / 7)
-  return `${totalWeeks}w ago`
+  if (totalDays < 30) {
+    return `${totalWeeks}w ago`
+  }
+
+  const totalMonths = Math.floor(totalDays / 30)
+  if (totalDays < 365) {
+    return `${totalMonths}mo ago`
+  }
+
+  const totalYears = Math.floor(totalDays / 365)
+  return `${totalYears}y ago`
 }
 
 function setLastUpdated(value) {
