@@ -14,6 +14,7 @@ const searchMeta = document.getElementById("search-meta")
 
 const resultsBody = document.getElementById("results-body")
 const resultsCount = document.getElementById("results-count")
+const lastUpdated = document.getElementById("last-updated")
 
 const basePath = window.location.pathname.replace(/[^/]*$/, "")
 const apiBase = `${basePath}api`
@@ -92,6 +93,25 @@ function setResults(rows) {
   })
 }
 
+function setLastUpdated(value) {
+  if (!lastUpdated) {
+    return
+  }
+
+  if (!value) {
+    lastUpdated.textContent = "Last updated: unavailable"
+    return
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    lastUpdated.textContent = "Last updated: unavailable"
+    return
+  }
+
+  lastUpdated.textContent = `Last updated: ${parsed.toISOString()}`
+}
+
 async function resolveApiMode() {
   try {
     staticManifest = await fetchJson(`${apiBase}/manifest.json`)
@@ -154,6 +174,21 @@ async function apiSearch({type, query, start, end, language, limit}) {
     limit: String(safeLimit),
   })
   return fetchJson(`${apiBase}/search?${params.toString()}`)
+}
+
+async function loadLastUpdated() {
+  try {
+    if (apiMode === "static") {
+      const data = await fetchJson(`${apiBase}/last-updated.json`)
+      setLastUpdated(data.updatedAt)
+      return
+    }
+
+    const data = await fetchJson(`${apiBase}/last-updated`)
+    setLastUpdated(data.updatedAt)
+  } catch (error) {
+    setLastUpdated(null)
+  }
 }
 
 async function searchStatic({type, query, start, end, language, limit}) {
@@ -364,6 +399,7 @@ searchForm.addEventListener("submit", async (event) => {
 
 async function init() {
   await resolveApiMode()
+  await loadLastUpdated()
   await populateLatestDates()
   await populateLanguages()
   searchLanguage.value = "(null)"

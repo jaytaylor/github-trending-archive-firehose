@@ -74,6 +74,7 @@ jobs:
           }
 
           const manifest = {}
+          let latestMtimeMs = null
 
           for (const kind of kinds) {
             const kindRoot = path.join(archiveRoot, kind)
@@ -89,7 +90,14 @@ jobs:
                 const dayRoot = path.join(yearRoot, day)
                 const languages = listFiles(dayRoot)
                   .filter((name) => name.endsWith(".json"))
-                  .map((name) => name.replace(/\\.json$/, ""))
+                  .map((name) => {
+                    const filePath = path.join(dayRoot, name)
+                    const stat = fs.statSync(filePath)
+                    if (latestMtimeMs === null || stat.mtimeMs > latestMtimeMs) {
+                      latestMtimeMs = stat.mtimeMs
+                    }
+                    return name.replace(/\\.json$/, "")
+                  })
                   .sort()
                 languagesByDate[day] = languages
               }
@@ -106,6 +114,17 @@ jobs:
 
           fs.mkdirSync(path.dirname(outputPath), {recursive: true})
           fs.writeFileSync(outputPath, JSON.stringify(manifest, null, 2))
+          const updatedPath = path.join(process.cwd(), ".scratch/pages/api/last-updated.json")
+          fs.writeFileSync(
+            updatedPath,
+            JSON.stringify(
+              {
+                updatedAt: latestMtimeMs === null ? null : new Date(latestMtimeMs).toISOString(),
+              },
+              null,
+              2
+            )
+          )
           NODE
           touch "$site_dir/.nojekyll"
       - uses: actions/upload-pages-artifact@v3

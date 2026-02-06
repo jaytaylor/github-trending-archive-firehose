@@ -30,6 +30,7 @@ const CONTENT_TYPES: Record<string, string> = {
 const MAX_SEARCH_DAYS = 370
 
 const latestCache = new Map<string, string | null>()
+const lastUpdatedCache = new Map<string, string | null>()
 
 export async function startUiServer(options: UiServerOptions) {
     const archiveRoot = path.resolve(options.archiveRoot)
@@ -94,6 +95,9 @@ async function handleApi(requestUrl: URL, archiveRoot: string, res: http.ServerR
             return
         case "/api/search":
             await handleSearch(requestUrl, archiveRoot, res)
+            return
+        case "/api/last-updated":
+            await handleLastUpdated(archiveRoot, res)
             return
         default:
             sendJson(res, 404, {error: "Unknown API route"})
@@ -211,6 +215,18 @@ async function handleSearch(requestUrl: URL, archiveRoot: string, res: http.Serv
     })
 }
 
+async function handleLastUpdated(archiveRoot: string, res: http.ServerResponse) {
+    const cacheKey = `last-updated:${archiveRoot}`
+    if (lastUpdatedCache.has(cacheKey)) {
+        sendJson(res, 200, {updatedAt: lastUpdatedCache.get(cacheKey)})
+        return
+    }
+
+    const updatedAt = await findLatestUpdatedAt(archiveRoot)
+    lastUpdatedCache.set(cacheKey, updatedAt)
+    sendJson(res, 200, {updatedAt})
+}
+
 async function searchArchive(params: {
     archiveRoot: string
     type: "repository" | "developer"
@@ -293,6 +309,56 @@ async function findLatestDate(typeRoot: string): Promise<string | null> {
     }
 
     return null
+}
+
+async function findLatestUpdatedAt(archiveRoot: string): Promise<string | null> {
+    const typeRoots = ["repository", "developer"].map((type) => path.join(archiveRoot, type))
+    let latestMtimeMs: number | null = null
+
+    for (const typeRoot of typeRoots) {
+        let yearDirs
+        try {
+            yearDirs = await fs.readdir(typeRoot, {withFileTypes: true})
+        } catch {
+            continue
+        }
+
+        const years = yearDirs
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name)
+            .filter((name) => /^\d{4}$/.test(name))
+
+        for (const year of years) {
+            const yearRoot = path.join(typeRoot, year)
+            const dateDirs = await fs.readdir(yearRoot, {withFileTypes: true})
+            const dates = dateDirs
+                .filter((entry) => entry.isDirectory())
+                .map((entry) => entry.name)
+                .filter((name) => isIsoDate(name))
+
+            for (const date of dates) {
+                const dayRoot = path.join(yearRoot, date)
+                const dayEntries = await fs.readdir(dayRoot, {withFileTypes: true})
+                for (const entry of dayEntries) {
+                    if (!entry.isFile() || !entry.name.endsWith(".json")) {
+                        continue
+                    }
+
+                    const filePath = path.join(dayRoot, entry.name)
+                    const stat = await fs.stat(filePath)
+                    if (latestMtimeMs === null || stat.mtimeMs > latestMtimeMs) {
+                        latestMtimeMs = stat.mtimeMs
+                    }
+                }
+            }
+        }
+    }
+
+    if (latestMtimeMs === null) {
+        return null
+    }
+
+    return new Date(latestMtimeMs).toISOString()
 }
 
 async function serveStatic(uiRoot: string, pathname: string, res: http.ServerResponse) {
