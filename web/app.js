@@ -12,6 +12,11 @@ const searchEnd = document.getElementById("search-end")
 const searchLanguage = document.getElementById("search-language")
 const searchMeta = document.getElementById("search-meta")
 
+const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"))
+const viewSections = Array.from(document.querySelectorAll("[data-view]"))
+const resultsSection = document.getElementById("results")
+const resultsTitle = document.getElementById("results-title")
+
 const resultsBody = document.getElementById("results-body")
 const resultsCount = document.getElementById("results-count")
 const lastUpdated = document.getElementById("last-updated")
@@ -66,7 +71,8 @@ function setResults(rows) {
 
   if (rows.length === 0) {
     const empty = document.createElement("div")
-    empty.className = "empty"
+    empty.className =
+      "rounded-xl border border-dashed border-neutral-200 px-4 py-8 text-center text-neutral-500"
     empty.textContent = "No results found."
     resultsBody.appendChild(empty)
     return
@@ -74,16 +80,20 @@ function setResults(rows) {
 
   rows.forEach((row) => {
     const wrapper = document.createElement("div")
-    wrapper.className = "result-row"
+    wrapper.className =
+      "grid grid-cols-[90px_70px_1fr] items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3"
 
     const date = document.createElement("div")
+    date.className = "text-neutral-500"
     date.textContent = row.date
 
     const rank = document.createElement("div")
+    rank.className = "text-neutral-500"
     rank.textContent = row.rank ? `#${row.rank}` : "-"
 
     const name = document.createElement("div")
-    name.innerHTML = `<strong>${row.name}</strong> <span>${row.language ? row.language : "all"}</span>`
+    const languageLabel = row.language ? row.language : "all"
+    name.innerHTML = `<strong>${row.name}</strong> <span class="text-neutral-500">${languageLabel}</span>`
 
     wrapper.appendChild(date)
     wrapper.appendChild(rank)
@@ -139,23 +149,47 @@ function setLastUpdated(value) {
   }
 
   if (!value) {
-    lastUpdated.textContent = "Last updated: unavailable"
+    lastUpdated.textContent = "Last refreshed: unavailable"
     return
   }
 
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) {
-    lastUpdated.textContent = "Last updated: unavailable"
+    lastUpdated.textContent = "Last refreshed: unavailable"
     return
   }
 
   const relative = formatRelativeAge(parsed)
   if (!relative) {
-    lastUpdated.textContent = `Last updated: ${parsed.toISOString()}`
+    lastUpdated.textContent = `Last refreshed ${parsed.toISOString()}`
     return
   }
 
-  lastUpdated.textContent = `Last updated: ${parsed.toISOString()} (${relative})`
+  lastUpdated.textContent = `Last refreshed ${parsed.toISOString()} (${relative})`
+}
+
+function setActiveView(view) {
+  viewSections.forEach((section) => {
+    section.classList.toggle("hidden", section.dataset.view !== view)
+  })
+
+  viewLinks.forEach((link) => {
+    const isActive = link.dataset.viewLink === view
+    link.classList.toggle("border-neutral-900", isActive)
+    link.classList.toggle("font-semibold", isActive)
+    link.classList.toggle("text-neutral-900", isActive)
+    link.classList.toggle("border-transparent", !isActive)
+    link.classList.toggle("text-neutral-500", !isActive)
+  })
+
+  const slot = document.querySelector(`[data-view=\"${view}\"] [data-results-slot]`)
+  if (slot && resultsSection) {
+    slot.appendChild(resultsSection)
+  }
+
+  if (resultsTitle) {
+    resultsTitle.textContent = view === "snapshot" ? "Snapshot Results" : "Search Results"
+  }
 }
 
 async function resolveApiMode() {
@@ -444,11 +478,19 @@ searchForm.addEventListener("submit", async (event) => {
 })
 
 async function init() {
+  setActiveView("snapshot")
   await resolveApiMode()
   await loadLastUpdated()
   await populateLatestDates()
   await populateLanguages()
   searchLanguage.value = "(null)"
+
+  viewLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault()
+      setActiveView(link.dataset.viewLink)
+    })
+  })
 }
 
 init().catch((error) => {
