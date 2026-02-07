@@ -13,8 +13,8 @@
       <div class="flex flex-wrap items-center gap-6">
         <div class="text-xl font-semibold">GitHub Trending Firehose</div>
         <nav class="flex items-center gap-4 text-sm">
-          <a href="#" data-view-link="snapshot" class="border-b-2 border-neutral-900 pb-1 font-semibold text-neutral-900">Snapshot Search</a>
-          <a href="#" data-view-link="range" class="border-b-2 border-transparent pb-1 text-neutral-500 hover:text-neutral-900">Range Search</a>
+          <a href="snapshot" data-view-link="snapshot" class="border-b-2 border-neutral-900 pb-1 font-semibold text-neutral-900">Snapshot Search</a>
+          <a href="search" data-view-link="range" class="border-b-2 border-transparent pb-1 text-neutral-500 hover:text-neutral-900">Range Search</a>
         </nav>
       </div>
     </header>
@@ -66,8 +66,8 @@
             <input id="search-start" type="date" class="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm" />
             <input id="search-end" type="date" class="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm" />
             <div class="flex flex-wrap gap-2">
-              <button type="button" class="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs">Past 365d</button>
-              <button type="button" class="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs">All time</button>
+              <button type="button" data-range="365" class="range-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs">Past 365d</button>
+              <button type="button" data-range="all" class="range-btn rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs">All time</button>
             </div>
           </form>
 

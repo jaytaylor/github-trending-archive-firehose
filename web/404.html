@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redirecting…</title>
+</head>
+<body>
+  <script>
+    (function () {
+      var path = window.location.pathname.replace(/\/+$/, "")
+      var parts = path.split("/").filter(Boolean)
+      var view = parts.length > 0 ? parts[parts.length - 1] : ""
+      if (view !== "snapshot" && view !== "search") {
+        view = ""
+      }
+      var basePath = window.location.pathname.replace(/\/[^/]*$/, "/")
+      var target = basePath
+      if (view) {
+        target += "?view=" + encodeURIComponent(view)
+      }
+      window.location.replace(target)
+    })()
+  </script>
+</body>
+</html>

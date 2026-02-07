@@ -11,6 +11,7 @@ const searchStart = document.getElementById("search-start")
 const searchEnd = document.getElementById("search-end")
 const searchLanguage = document.getElementById("search-language")
 const searchMeta = document.getElementById("search-meta")
+const rangeButtons = Array.from(document.querySelectorAll("[data-range]"))
 
 const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"))
 const viewSections = Array.from(document.querySelectorAll("[data-view]"))
@@ -103,6 +104,38 @@ function setResults(rows) {
   })
 }
 
+function normalizeView(value) {
+  if (value === "search" || value === "range") {
+    return "range"
+  }
+  return "snapshot"
+}
+
+function getViewFromLocation() {
+  const path = window.location.pathname.replace(/\/+$/, "")
+  if (path.endsWith("/search")) {
+    return "range"
+  }
+  if (path.endsWith("/snapshot")) {
+    return "snapshot"
+  }
+  const params = new URLSearchParams(window.location.search)
+  const viewParam = params.get("view")
+  if (viewParam) {
+    return normalizeView(viewParam)
+  }
+  return "snapshot"
+}
+
+function buildViewPath(view) {
+  const rootPath = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath
+  const suffix = view === "range" ? "/search" : "/snapshot"
+  if (!rootPath) {
+    return suffix
+  }
+  return `${rootPath}${suffix}`
+}
+
 function formatRelativeAge(value) {
   const deltaMs = Date.now() - value.getTime()
   if (!Number.isFinite(deltaMs)) {
@@ -168,7 +201,7 @@ function setLastUpdated(value) {
   lastUpdated.textContent = `Last refreshed ${parsed.toISOString()} (${relative})`
 }
 
-function setActiveView(view) {
+function setActiveView(view, {updateHistory = false, replaceHistory = false} = {}) {
   viewSections.forEach((section) => {
     section.classList.toggle("hidden", section.dataset.view !== view)
   })
@@ -189,6 +222,15 @@ function setActiveView(view) {
 
   if (resultsTitle) {
     resultsTitle.textContent = view === "snapshot" ? "Snapshot Results" : "Search Results"
+  }
+
+  if (updateHistory) {
+    const path = buildViewPath(view)
+    if (replaceHistory) {
+      history.replaceState({view}, "", path)
+    } else {
+      history.pushState({view}, "", path)
+    }
   }
 }
 
@@ -254,6 +296,89 @@ async function apiSearch({type, query, start, end, language, limit}) {
     limit: String(safeLimit),
   })
   return fetchJson(`${apiBase}/search?${params.toString()}`)
+}
+
+async function apiDateRange(type) {
+  if (apiMode === "static") {
+    const dates = Object.keys(staticManifest?.[type]?.languagesByDate ?? {}).sort()
+    const latestDate = staticManifest?.[type]?.latestDate ?? (dates.length > 0 ? dates[dates.length - 1] : null)
+    const earliestDate = dates.length > 0 ? dates[0] : null
+    return {earliestDate, latestDate}
+  }
+  return fetchJson(`${apiBase}/date-range?type=${type}`)
+}
+
+function parseIsoDateToUtc(value) {
+  const parsed = parseIsoDate(value)
+  if (!parsed) {
+    return null
+  }
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate()))
+}
+
+function formatDateInput(value) {
+  return value.toISOString().slice(0, 10)
+}
+
+async function applyRange(range) {
+  setMeta(searchMeta, "Updating range...")
+  const type = searchType.value
+  const rangeData = await apiDateRange(type)
+  const latest = rangeData.latestDate
+  const earliest = rangeData.earliestDate
+
+  if (!latest) {
+    setMeta(searchMeta, "No dates available for this range.", true)
+    return
+  }
+
+  const latestDate = parseIsoDateToUtc(latest)
+  if (!latestDate) {
+    setMeta(searchMeta, "Invalid latest date.", true)
+    return
+  }
+
+  let startDate = latestDate
+  if (range === "all") {
+    if (!earliest) {
+      setMeta(searchMeta, "No earliest date found.", true)
+      return
+    }
+    const earliestDate = parseIsoDateToUtc(earliest)
+    if (!earliestDate) {
+      setMeta(searchMeta, "Invalid earliest date.", true)
+      return
+    }
+    startDate = earliestDate
+  } else {
+    const days = Number.parseInt(range, 10)
+    if (!Number.isFinite(days) || days <= 0) {
+      setMeta(searchMeta, "Invalid range selection.", true)
+      return
+    }
+    startDate = new Date(latestDate.getTime() - (days - 1) * MS_PER_DAY)
+    if (earliest) {
+      const earliestDate = parseIsoDateToUtc(earliest)
+      if (earliestDate && startDate.getTime() < earliestDate.getTime()) {
+        startDate = earliestDate
+      }
+    }
+  }
+
+  searchStart.value = formatDateInput(startDate)
+  searchEnd.value = formatDateInput(latestDate)
+  setActiveRangeButton(range)
+  setMeta(searchMeta, `Range set to ${searchStart.value} → ${searchEnd.value}.`)
+}
+
+function setActiveRangeButton(range) {
+  rangeButtons.forEach((button) => {
+    const isActive = button.dataset.range === range
+    button.classList.toggle("bg-neutral-900", isActive)
+    button.classList.toggle("text-white", isActive)
+    button.classList.toggle("border-neutral-900", isActive)
+    button.classList.toggle("bg-white", !isActive)
+  })
 }
 
 async function loadLastUpdated() {
@@ -478,7 +603,9 @@ searchForm.addEventListener("submit", async (event) => {
 })
 
 async function init() {
-  setActiveView("snapshot")
+  const initialView = getViewFromLocation()
+  const hasViewParam = new URLSearchParams(window.location.search).has("view")
+  setActiveView(initialView, {updateHistory: hasViewParam, replaceHistory: true})
   await resolveApiMode()
   await loadLastUpdated()
   await populateLatestDates()
@@ -488,7 +615,17 @@ async function init() {
   viewLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault()
-      setActiveView(link.dataset.viewLink)
+      setActiveView(link.dataset.viewLink, {updateHistory: true})
+    })
+  })
+
+  window.addEventListener("popstate", () => {
+    setActiveView(getViewFromLocation())
+  })
+
+  rangeButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      await applyRange(button.dataset.range)
     })
   })
 }
