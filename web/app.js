@@ -32,6 +32,10 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
 let apiMode = "server"
 let staticManifest = null
 
+function getTodayIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 function setMeta(el, message, isError = false) {
   el.textContent = message
   el.classList.toggle("error", isError)
@@ -501,8 +505,11 @@ async function populateLatestDates() {
     apiLatest("developer"),
   ])
 
+  if (!snapshotDate.value) {
+    snapshotDate.value = getTodayIso()
+  }
+
   if (repoLatest.date) {
-    snapshotDate.value = repoLatest.date
     searchEnd.value = repoLatest.date
   }
 
@@ -512,7 +519,7 @@ async function populateLatestDates() {
     searchStart.value = start.toISOString().slice(0, 10)
   }
 
-  if (snapshotType.value === "developer" && devLatest.date) {
+  if (snapshotType.value === "developer" && !snapshotDate.value && devLatest.date) {
     snapshotDate.value = devLatest.date
   }
 }
